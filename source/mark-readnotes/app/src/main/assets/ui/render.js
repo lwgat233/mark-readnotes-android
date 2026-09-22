@@ -157,6 +157,13 @@ function renderInto(node, src, base) {
   box.innerHTML = raw.html;
   const st = { removedTags: raw.st.removedTags, removedAttrs: raw.st.removedAttrs };
   filterNode(box, false, st);
+  // 表格外面套一层横向滚动容器（宽表不会把页面撑破）—— 参照 waikr/KardLeaf 的 preview.html 做法
+  Array.prototype.slice.call(box.querySelectorAll('table')).forEach(function (t) {
+    const wrap = document.createElement('div');
+    wrap.className = 'table-scroll';
+    t.parentNode.insertBefore(wrap, t);
+    wrap.appendChild(t);
+  });
   node.replaceChildren.apply(node, Array.prototype.slice.call(box.childNodes));
   const ms = Math.round(performance.now() - t0);
   const q = function (s) { return node.querySelectorAll(s).length; };
