@@ -5,10 +5,10 @@ OK   settings.root 有最近扫描时间行 | 最近扫描
 OK   settings.node 有待整理一行 | 待整理
 OK   settings.folder 新建文件夹：输入框+键在位 | True
 OK   settings.folder 标签→文件夹：两个输入+键在位 | True
-     行内按键数：2
+     行内按键数：3
      底部常驻键：["刷新索引","重新选择目录","关闭"]
 OK   settings.keys 底部常驻键 3 个 | 3
-     刷新结果：{"files":14,"blocks":26}
+     刷新结果：{"files":17,"blocks":31}
 OK   settings.refresh 回包里有文件数 | True
 OK   settings.refresh 主动刷新时才 walk | True
 OK   settings.refresh 扫描只覆盖随笔目录 | True

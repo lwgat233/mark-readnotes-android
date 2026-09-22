@@ -1,17 +1,17 @@
 ==== 板块验收：随笔 ====
-OK   notes.home 卡片数=索引块数 | 22
-     页面版本标记 build=0.1.0+r12
+OK   notes.home 卡片数=索引块数 | 27
+     页面版本标记 build=0.1.0+r15
 OK   notes.board 白板宽=可视宽 | 412
 OK   notes.board 白板高=可视高 | 530
 OK   notes.board 白板贴顶(y=0) | 0
 OK   notes.arch 标题在归档区里 | True
 OK   notes.arch 正文不在归档区里 | True
-     验收块 id=51 落位：随笔/boardtest.md
+     验收块 id=64 落位：随笔/boardtest.md
 OK   notes.new 块已写进标签对应的 md | 随笔/boardtest.md 含标题
      搬家后该块落位：随笔/boardtest2.md
 OK   notes.move 整块搬到了新文件 | 随笔/boardtest2.md 含该块
 OK   notes.delete 第一次点击进入确认态 | 再点一次确认删除
      删除后提示："已删除"
 OK   notes.delete 块已从 md 里删掉 | 随笔/boardtest2.md 不再含该块
-OK   notes.delete 块数回到基线 | 22
+OK   notes.delete 块数回到基线 | 27
 ---- 随笔: OK=11 FAIL=0

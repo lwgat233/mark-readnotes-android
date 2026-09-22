@@ -1,0 +1,31 @@
+22/Sep/2026 17:44:48 - "OPTIONS /dav/ HTTP/1.1" 401 -
+OK   自测 无认证要 401 | 401
+22/Sep/2026 17:44:48 - "OPTIONS /dav/ HTTP/1.1" 200 -
+OK   自测 OPTIONS 200 | 200
+22/Sep/2026 17:44:48 - "MKCOL /dav/%E9%9A%8F%E7%AC%94 HTTP/1.1" 201 -
+OK   自测 MKCOL 建目录 201 | 201
+22/Sep/2026 17:44:48 - "MKCOL /dav/%E9%9A%8F%E7%AC%94 HTTP/1.1" 405 -
+OK   自测 MKCOL 重复 405 | 405
+22/Sep/2026 17:44:48 - "PUT /dav/%E9%9A%8F%E7%AC%94/web.md HTTP/1.1" 201 -
+OK   自测 PUT 文件 201 | 201
+22/Sep/2026 17:44:48 - "GET /dav/%E9%9A%8F%E7%AC%94/web.md HTTP/1.1" 200 -
+OK   自测 GET 回原文 | # 标题
+#web
+正文
+22/Sep/2026 17:44:48 - "PROPFIND /dav/%E9%9A%8F%E7%AC%94 HTTP/1.1" 207 -
+OK   自测 PROPFIND 207 | 207
+OK   自测 PROPFIND 里有文件名 | True
+OK   自测 PROPFIND 里有长度 | True
+OK   自测 PROPFIND 里有 etag | True
+OK   自测 PROPFIND 里有时间 | True
+     href: <D:href>/dav/%E9%9A%8F%E7%AC%94/</D:href>
+     href: <D:href>/dav/%E9%9A%8F%E7%AC%94/web.md</D:href>
+OK   自测 href 是编码后的完整路径（不重复前缀） | True
+OK   自测 href 没有二次编码（不该出现 %25） | True
+22/Sep/2026 17:44:48 - "PROPFIND /dav/../etc HTTP/1.1" 404 -
+OK   自测 越界 ../ 被挡 | True
+22/Sep/2026 17:44:48 - "DELETE /dav/%E9%9A%8F%E7%AC%94/web.md HTTP/1.1" 204 -
+OK   自测 DELETE 204 | 204
+22/Sep/2026 17:44:48 - "DELETE /dav/%E9%9A%8F%E7%AC%94/web.md HTTP/1.1" 404 -
+OK   自测 DELETE 不存在的 404 | 404
+---- 自测：OK=16 FAIL=0

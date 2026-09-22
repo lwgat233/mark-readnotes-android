@@ -15,9 +15,14 @@ data class BlockRow(
     val id: Long, val fileId: Long, val docUri: String, val heading: String, val tag: String,
     val tags: String, val body: String, val raw: String, val charCount: Int, val index: Int, val updatedAt: Long
 )
+/** 同步基线：上一次同步时两边各是什么样子（判断“谁动过”全靠它） */
+data class SyncRow(
+    val relPath: String, val localSize: Long, val localHash: String,
+    val remoteSize: Long, val remoteMtime: Long, val remoteEtag: String, val syncedAt: Long
+)
 
 /** SQLite：索引与“最近编辑”顺序的权威源（正文的权威源始终是磁盘上的 md） */
-class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 2) {
+class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 3) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -38,6 +43,11 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 2) {
         db.execSQL("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)")
         // 标签 → 文件夹（文件夹是标签的一个属性；空 = 直接放随笔根下）
         db.execSQL("CREATE TABLE tag_folder(tag TEXT PRIMARY KEY, folder TEXT, updated_at INTEGER)")
+        // WebDAV 同步基线（见 docs/同步规格.md）
+        db.execSQL(
+            """CREATE TABLE sync_state(rel_path TEXT PRIMARY KEY, local_size INTEGER, local_hash TEXT,
+               remote_size INTEGER, remote_mtime INTEGER, remote_etag TEXT, synced_at INTEGER)"""
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) {
@@ -46,6 +56,13 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 2) {
             runCatching { db.execSQL("ALTER TABLE note_file ADD COLUMN rel_path TEXT") }
             runCatching { db.execSQL("ALTER TABLE note_file ADD COLUMN folder TEXT") }
             db.execSQL("CREATE TABLE IF NOT EXISTS tag_folder(tag TEXT PRIMARY KEY, folder TEXT, updated_at INTEGER)")
+        }
+        // v2 → v3：WebDAV 同步基线
+        if (old < 3) {
+            db.execSQL(
+                """CREATE TABLE IF NOT EXISTS sync_state(rel_path TEXT PRIMARY KEY, local_size INTEGER, local_hash TEXT,
+                   remote_size INTEGER, remote_mtime INTEGER, remote_etag TEXT, synced_at INTEGER)"""
+            )
         }
     }
 
@@ -217,6 +234,37 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 2) {
     fun metaPut(key: String, value: String) {
         writableDatabase.execSQL("INSERT OR REPLACE INTO meta(key,value) VALUES(?,?)", arrayOf(key, value))
     }
+
+    // ---------- sync_state（WebDAV 同步基线） ----------
+
+    fun syncGet(relPath: String): SyncRow? =
+        readableDatabase.rawQuery("SELECT * FROM sync_state WHERE rel_path=?", arrayOf(relPath)).use { c ->
+            if (c.moveToFirst()) syncRow(c) else null
+        }
+
+    fun syncAll(): List<SyncRow> = readableDatabase.rawQuery("SELECT * FROM sync_state", null).use { c ->
+        val out = ArrayList<SyncRow>()
+        while (c.moveToNext()) out.add(syncRow(c))
+        out
+    }
+
+    fun syncPut(relPath: String, localSize: Long, localHash: String, remoteSize: Long, remoteMtime: Long, remoteEtag: String) {
+        val cv = ContentValues().apply {
+            put("rel_path", relPath); put("local_size", localSize); put("local_hash", localHash)
+            put("remote_size", remoteSize); put("remote_mtime", remoteMtime); put("remote_etag", remoteEtag)
+            put("synced_at", System.currentTimeMillis())
+        }
+        writableDatabase.insertWithOnConflict("sync_state", null, cv, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    fun syncForget(relPath: String) = writableDatabase.delete("sync_state", "rel_path=?", arrayOf(relPath))
+
+    private fun syncRow(c: Cursor) = SyncRow(
+        c.getString(c.getColumnIndexOrThrow("rel_path")) ?: "",
+        c.getLong(c.getColumnIndexOrThrow("local_size")), c.getString(c.getColumnIndexOrThrow("local_hash")) ?: "",
+        c.getLong(c.getColumnIndexOrThrow("remote_size")), c.getLong(c.getColumnIndexOrThrow("remote_mtime")),
+        c.getString(c.getColumnIndexOrThrow("remote_etag")) ?: "", c.getLong(c.getColumnIndexOrThrow("synced_at"))
+    )
 
     fun insertBlock(fileId: Long, docUri: String, heading: String, tag: String, tags: String, body: String, raw: String, index: Int, fileMtime: Long, fileSize: Long, updatedAt: Long): Long {
         val cv = ContentValues().apply {

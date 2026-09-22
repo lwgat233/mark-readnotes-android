@@ -1,12 +1,12 @@
 ==== 板块验收：导出 ====
-     计划：['web/(1)', 'paper/(2)', '法规/标准/(1)', '法规/2024/(1)', '视频/RAG/(1)', 'unsorted/(1)', 'legacytest/(2)', 'storetest/(3)', 'movetest/(1)', 'mergetest/(3)', 'movetest173134/(1)', 'mergetest173134/(3)', 'legacyboard/(2)', 'movetest173401/(1)', 'mergetest173401/(3)']
+     计划：['web/(1)', 'paper/(2)', '法规/标准/(1)', '法规/2024/(1)', '视频/RAG/(1)', 'unsorted/(1)', 'legacytest/(2)', 'storetest/(3)', 'movetest173134/(1)', 'mergetest173134/(3)', 'movetest173401/(1)', 'mergetest173401/(3)', 'movetest173657/(1)', 'mergetest173657/(3)', 'remoteonly/(1)', 'legacyboard/(2)', 'movetest175129/(1)', 'mergetest175129/(3)']
 OK   export.opts 有文件可导 | True
 OK   export.opts 目录数 ≥1 | True
 OK   export.exclude 有块被排除 | True
 OK   export.exclude 文件数变少 | True
 OK   export.preview 列出目录 ≥1 | True
-OK   export.preview 预览没有改动磁盘 | 11
-     提示："已导出 26 个文件（新建 12，更新 14）到 Documents/mark-readnotes-export"
+OK   export.preview 预览没有改动磁盘 | 17
+     提示："已导出 31 个文件（新建 10，更新 21）到 Documents/mark-readnotes-export"
 OK   export.write 盘上有 md 文件 | True
 OK   export.write 没有 -2 之类的副本 | 0
 点不到：元素不存在或不可见 #ex-preview

@@ -505,6 +505,15 @@ class NotesRepo(private val store: Store) {
         return JSONObject().put("moved", JSONArray(moved)).put("failed", JSONArray(failed)).put("left", db.legacyFiles().size)
     }
 
+    /** 外部（同步）把内容写进文件之后，把这个文件的块重建一遍 */
+    @Synchronized
+    fun reloadFile(fileId: Long): Int {
+        val root = root() ?: return 0
+        val f = db.fileById(fileId) ?: return 0
+        val doc = saf.stat(root.treeUri, f.docId) ?: return 0
+        return loadFile(f, root, doc.mtime, doc.size)
+    }
+
     /** 取图片字节流（给 WebView 的虚拟源用） */
     fun openImage(docId: String): java.io.InputStream? {
         val root = root() ?: return null

@@ -13,7 +13,7 @@ export ANDROID_HOME=/home/lwgat/tools/android-sdk JAVA_HOME=/home/lwgat/tools/jd
 unset ANDROID_SDK_ROOT
 ADB="adb -s emulator-5554"
 PKG=dev.markreadnotes
-BOARDS="notes render store export settings"
+BOARDS="notes render store export settings sync"
 
 ensure_emulator() {
   if $ADB shell true >/dev/null 2>&1; then echo "模拟器已在线"; return 0; fi

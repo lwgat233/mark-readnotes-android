@@ -14,7 +14,7 @@ function sheetShow(title, rows, actions) {
       r.items.forEach(function (it) {
         if (it.id) {
           const inp = document.createElement('input');
-          inp.id = it.id; inp.type = 'text'; inp.placeholder = it.ph || '';
+          inp.id = it.id; inp.type = it.type || 'text'; inp.placeholder = it.ph || '';
           if (it.value) inp.value = it.value;
           box.appendChild(inp);
         }

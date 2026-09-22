@@ -2,8 +2,9 @@ package dev.markreadnotes.ops
 
 import android.content.Context
 import dev.markreadnotes.Logs
-import dev.markreadnotes.export.ExportRepo
 import dev.markreadnotes.notes.NotesRepo
+import dev.markreadnotes.export.ExportRepo
+import dev.markreadnotes.sync.SyncRepo
 import org.json.JSONObject
 
 /**
@@ -22,6 +23,7 @@ class OpsRouter(
     private val ctx: Context,
     private val notes: NotesRepo,
     private val export: ExportRepo,
+    private val sync: SyncRepo,
     private val buildTag: String,
     private val pickTree: () -> Unit,
     private val pickExport: () -> Unit
@@ -49,6 +51,7 @@ class OpsRouter(
         "src", "idx" -> SourceOps.handle(op, args, notes, pickTree, pickExport)
         "blk" -> BlockOps.handle(op, args, notes)
         "exp" -> ExportOps.handle(op, args, export, ctx)
+        "sync" -> SyncOps.handle(op, args, sync)
         "ui" -> UiOps.handle(op, args, ctx)
         else -> throw IllegalArgumentException("未知 op：$op")
     }

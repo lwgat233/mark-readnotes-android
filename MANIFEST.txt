@@ -1,8 +1,10 @@
 mark-readnotes.android（随笔）产物清单
-更新：2026-09-22（第 7 轮：一个标签＝一个文件）
+更新：2026-09-22（第 8 轮：WebDAV 同步）
 包名：dev.markreadnotes　　版本：0.1.0
 
-apk/mark-readnotes-debug-20260922-r7.apk      ← 当前构件（页内标记 0.1.0+r12，一个标签＝一个文件）
+apk/mark-readnotes-debug-20260922-r8.apk      ← 当前构件（页内标记 0.1.0+r15，WebDAV 同步）
+  sha256 23742839f6bdc5ca1ecb392d9a2063b1caff029d4290796a063a08c97bd82089
+apk/mark-readnotes-debug-20260922-r7.apk      ← 第 7 轮构件（页内标记 0.1.0+r12，一个标签＝一个文件）
   sha256 dde4385633da6cf507017a1ede35db077605c77d9933ee58a0036f65b6eb28fd
 apk/mark-readnotes-debug-20260922-r6.apk      ← 第 6 轮构件（页内标记 0.1.0+r11，随笔独立目录 + 文件夹）
   sha256 4f2e4b460d982390e6f17b0b516735421c93d6f7d57e1f7a7419120930a0496e
@@ -25,7 +27,9 @@ source/mark-readnotes/          可构建的源码树（不含 build/ 与本机 
     Db.kt / Md.kt / Saf.kt / Logs.kt   一份数据一处：表结构 / 块解析 / SAF 读写 / 环形日志
     notes/NotesRepo.kt       随笔本体：读写、搬家、扫描索引、图片解析
     export/ExportRepo.kt     导出板块：规则、预览、写盘、分享准备
-    ops/OpsRouter.kt + AppOps/SourceOps/BlockOps/ExportOps/UiOps/JsonArgs   一个板块一个文件
+    ops/OpsRouter.kt + AppOps/SourceOps/BlockOps/ExportOps/SyncOps/UiOps/JsonArgs   一个板块一个文件
+    sync/WebDavClient.kt     WebDAV 客户端（PROPFIND/GET/PUT/DELETE/MKCOL + Basic 认证，用 OkHttp）
+    sync/SyncRepo.kt         同步引擎：基线判定、计划、上传/下载、冲突三选
     shell/WebShell.kt        壳：assets 映射、JS 桥、图片拦截、返回键
     shell/SafPicker.kt       目录授权（笔记根 / 导出根）
     shell/ShareIntent.kt     FileProvider 一次性授权分享
@@ -52,14 +56,17 @@ docs/
   验收清单-第5轮.md              渲染层重写的改造前后对照（16绿11红 → 29绿0红）
   验收清单-第6轮.md              随笔独立目录 + 文件夹（D1–D4）+ 五板块 83 条全绿
   验收清单-第7轮.md              一个标签＝一个文件（D5 搬家 + 同名合并）+ 五板块 97 条全绿
+  验收清单-第8轮.md              WebDAV 同步（S1–S8）+ 六板块 121 条全绿
+  同步规格.md                    WebDAV 同步的规格与判据（基线、上传/下载、冲突三选、S1–S8）
   新需求规格-随笔独立目录.md     随笔独立目录 + 标签→文件夹映射（第 6 轮已实现，含 D1–D4 判据）
   参考与改进计划-KardLeaf.md     参考 waikr/KardLeaf 的功能对照表与合规规矩
-  问题与需求登记.md             P1–P18 现象/根因/修法/证据（含写空源文件的事故、验收假红来源、搬家重复块与内容分裂）
+  问题与需求登记.md             P1–P20 现象/根因/修法/证据（含写空源文件的事故、验收假红来源、搬家重复块、WebDAV 四坑）
   缺口清单.md                   还没做的（功能/交互/测试/已知限制）
 
 evidence/
-  构件哈希.txt / 构件哈希-r2..r7.txt                各版 apk 的 sha256
-  board-summary-r7.txt / board-summary-r6.txt / board-summary-r4.txt   五板块结果汇总（r7：11/29/37/10/10）
+  构件哈希.txt / 构件哈希-r2..r8.txt                各版 apk 的 sha256
+  board-summary-r8.txt                            六板块结果汇总（r8：11/29/37/10/10/24 = 121 条）
+  board-sync.txt / dav-selftest.txt               第 8 轮同步板块原始输出 / WebDAV 服务自测（16 条）
   r7-folder.txt                                   第 7 轮实测的文件夹内文件
   board-store.txt / board-settings.txt            最近一次存储与设置板块的原始输出（含 D5）
   coverage-r6.txt / page-coverage-r6.txt          覆盖自检（文件层面 / 界面自检读数）
@@ -87,9 +94,11 @@ tools/
   netimg-server.py              网络图验收用的极简 HTTP 服务（把请求写进日志）
   fetch_vendor.py               拉取内置前端库：校验 npm 声明的 integrity → 装进 assets/ui/vendor
   fixtures/render-fixture.md    渲染判据用的固定文本（R1–R9 都覆盖）
+  webdav-mini.py                验收用的极简 WebDAV 服务（只用标准库）
+  dav-selftest.py               上面那台服务的自测（16 条：方法、认证、编码、越界）
   verify-board.sh               分板块验收跑法（一次一个板块；缺省跑完停模拟器回收内存）
   boards/_lib.sh                分板块验收公共库（断言/取值/重新聚焦应用/日志计数）
-  boards/{notes,render,store,export,settings}.sh   各板块的检查清单
+  boards/{notes,render,store,export,settings,sync}.sh   各板块的检查清单（sync 需要 tools/webdav-mini.py 起着）
   check_coverage.py             覆盖自检（登记表 vs 测试脚本），--strict 可当门禁
   refactor_split_repo.py        第 4 轮：把 Repo.kt 机械切分成 notes/ 与 export/
   refactor_split_ui.py          第 4 轮：把 app.js 机械切分成 8 个前端文件

@@ -39,4 +39,7 @@ android {
 dependencies {
     // addWebMessageListener：按 origin 开放的 JS↔原生通道（注入面比 @JavascriptInterface 小）
     implementation("androidx.webkit:webkit:1.11.0")
+    // WebDAV 同步：系统自带的 HttpURLConnection 不允许 PROPFIND 这类自定义方法。
+    // 参考 waikr/KardLeaf（Apache-2.0）的同步实现，它用的也是 OkHttp。
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

@@ -8,20 +8,22 @@ import dev.markreadnotes.notes.NotesRepo
 import dev.markreadnotes.ops.OpsRouter
 import dev.markreadnotes.shell.SafPicker
 import dev.markreadnotes.shell.WebShell
+import dev.markreadnotes.sync.SyncRepo
 
 /**
- * 只有一个 Activity：装配各个板块（Store → notes/export → op 层 → WebView 壳）。
+ * 只有一个 Activity：装配各个板块（Store → notes/export/sync → op 层 → WebView 壳）。
  * 界面全在前端 assets 里；这里只做装配与系统回调转发。
  */
 class MainActivity : Activity() {
 
     companion object {
-        private const val BUILD_TAG = "0.1.0+r12"
+        private const val BUILD_TAG = "0.1.0+r15"
     }
 
     private lateinit var store: Store
     private lateinit var notes: NotesRepo
     private lateinit var export: ExportRepo
+    private lateinit var sync: SyncRepo
     private lateinit var shell: WebShell
     private lateinit var picker: SafPicker
 
@@ -30,9 +32,10 @@ class MainActivity : Activity() {
         store = Store(this)
         notes = NotesRepo(store)
         export = ExportRepo(store)
+        sync = SyncRepo(store, notes)
         picker = SafPicker(this, notes, export) { type, data -> shell.push(type, data) }
         val router = OpsRouter(
-            this, notes, export, BUILD_TAG,
+            this, notes, export, sync, BUILD_TAG,
             { runOnUiThread { picker.pick(SafPicker.REQ_TREE) } },
             { runOnUiThread { picker.pick(SafPicker.REQ_EXPORT_TREE) } }
         )

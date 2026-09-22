@@ -47,6 +47,17 @@
 - **用途**：`WebViewCompat.addWebMessageListener`（按 origin 开放的 JS↔原生通道）
 - 由 Gradle 从阿里云镜像解析，未改代码
 
+## OkHttp 4.12.0（Apache-2.0）
+
+- **用途**：WebDAV 同步的 HTTP 客户端。系统自带的 `HttpURLConnection` 不允许 `PROPFIND` 这类自定义方法
+  （Android 的实现只放行 GET/POST/HEAD/OPTIONS/PUT/DELETE/TRACE），KardLeaf 用的也是 OkHttp。
+- 由 Gradle 从阿里云镜像解析，未改代码
+
+## 验收用的工具（本项目自写，不随产物分发）
+
+- `tools/webdav-mini.py`：只用标准库写的极简 WebDAV 服务（PROPFIND/GET/PUT/DELETE/MKCOL + Basic 认证），
+  只为验收用；不含任何第三方代码。`tools/dav-selftest.py` 是它的自测。
+
 ## 其它
 
 - 前端（`assets/ui/*.js`、`app.css`、`index.html`）、原生层与「块 → 标签 → 文件」的读写规则都是本项目自己写的；

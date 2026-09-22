@@ -12,7 +12,7 @@ window.MRN_REGISTRY = {
     { "id": "store",    "name": "存储", "order": 3, "carrier": "设置小窗里的状态行" },
     { "id": "export",   "name": "导出", "order": 4, "carrier": "导出小窗" },
     { "id": "settings", "name": "设置", "order": 5, "carrier": "设置小窗" },
-    { "id": "sync",     "name": "同步", "order": 6, "carrier": "（计划中）", "planned": true }
+    { "id": "sync",     "name": "同步", "order": 6, "carrier": "WebDAV 小窗（设置里打开）" }
   ],
   "features": [
     { "id": "notes.home",     "board": "notes", "name": "主页列出最近编辑的块", "carrier": "主页列表", "entry": "打开应用", "testId": "#list", "status": "done", "test": "boards/notes.sh#home" },
@@ -42,6 +42,7 @@ window.MRN_REGISTRY = {
     { "id": "export.share",   "board": "export", "name": "系统分享", "carrier": "导出小窗", "entry": "系统分享", "testId": "#btn-export", "status": "done", "test": "boards/export.sh#share" },
     { "id": "settings.root",  "board": "settings", "name": "笔记根与块数状态行", "carrier": "设置小窗", "entry": "主页 设置", "testId": "#btn-settings", "status": "done", "test": "boards/settings.sh#info" },
     { "id": "settings.refresh","board": "settings", "name": "刷新索引", "carrier": "设置小窗", "entry": "主页 设置", "testId": "#btn-settings", "status": "done", "test": "boards/settings.sh#refresh" },
-    { "id": "sync.webdav",    "board": "sync", "name": "WebDAV（基线 + 冲突三选）", "carrier": "（计划中）", "entry": "设置", "testId": null, "status": "planned", "test": null }
+    { "id": "sync.webdav",    "board": "sync", "name": "WebDAV 同步（基线 + 冲突三选）", "carrier": "同步小窗", "entry": "主页 设置 → WebDAV 同步", "testId": "#btn-settings", "status": "done", "test": "boards/sync.sh#run" },
+    { "id": "sync.conflict",  "board": "sync", "name": "冲突三选（保留本地/保留远端/跳过）", "carrier": "同步小窗", "entry": "同步后出现冲突行", "testId": "#btn-settings", "status": "done", "test": "boards/sync.sh#conflict" }
   ]
 };

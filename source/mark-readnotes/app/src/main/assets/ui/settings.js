@@ -37,7 +37,15 @@ function openSettings() {
     }
     const tf = s.tagFolders || [];
     if (tf.length) rows.push(rowKV('已指过的标签', tf.map(function (x) { return x.tag + '→' + (x.folder || '随笔'); }).join('　')));
+    rows.push({
+      k: 'WebDAV 同步', items: [
+        { text: (ST.sync && ST.sync.url) ? ST.sync.url : '还没设置' },
+        { btn: { label: '打开', act: 'davopen', fn: openSync } }
+      ]
+    });
   }
+  // 设置小窗打开时顺手把同步配置取回来（那一行要显示服务器地址）
+  call('sync.get').then(function (c) { ST.sync = c; }).catch(function () { });
   sheetShow('设置', rows, [
     { label: '刷新索引', fn: doRefresh },
     { label: '重新选择目录', fn: pickDir },
