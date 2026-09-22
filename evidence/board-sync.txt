@@ -8,27 +8,27 @@ OK   sync.ui 密码框是 password 类型 | password
 OK   sync.ui 测试+保存+同步 三个键在位 | True
      点测试的提示：能连上：能连上（207）
 OK   sync.ui 点「测试」真的去连了 | 能连上：能连上（207）
-     本次上传 4 个 / 下载 0 个 / 冲突 0
+     本次上传 3 个 / 下载 0 个 / 冲突 0
 OK   sync.upload 上传了文件（S2） | True
 OK   sync.upload 没有失败项 | 0
-     字节比对用：随笔/syncup175324.md
+     字节比对用：随笔/syncup181638.md
 OK   sync.upload 服务器上的内容与本地一致（S2） | cmp 相同
 OK   sync.plan 两边都没动时全是不用动（S3） | [0, 0, 0]
 OK   sync.plan 有不用动的文件 | True
 OK   sync.download 远端新增被识别为下载（S4） | [1, 1]
-OK   sync.download 本地出现了这个文件 | remoteonly-175324.md
+OK   sync.download 本地出现了这个文件 | remoteonly-181638.md
 OK   sync.download 内容对得上 | ok
-OK   sync.download 标签行也在 | #remoteonly-175324
-OK   sync.download 块数加了 1 | 33
-/tmp/sync_conf_local.md: 1 file pushed, 0 skipped. 0.6 MB/s (54 bytes in 0.000s)
+OK   sync.download 标签行也在 | #remoteonly-181638
+OK   sync.download 块数加了 1 | 15
+/tmp/sync_conf_local.md: 1 file pushed, 0 skipped. 0.2 MB/s (54 bytes in 0.000s)
 OK   sync.conflict 两边都改过要报冲突（S5） | [1, '两边都改过']
 OK   sync.conflict 执行时冲突也不动 | 1
 OK   sync.conflict 冲突后本地还是本地版本 | ok
 OK   sync.conflict 冲突后远端还是远端版本 | ok
 OK   sync.resolve 保留本地＝远端变成我的版本 | ok
-/tmp/sync_conf_local2.md: 1 file pushed, 0 skipped. 0.4 MB/s (48 bytes in 0.000s)
+/tmp/sync_conf_local2.md: 1 file pushed, 0 skipped. 0.3 MB/s (48 bytes in 0.000s)
 OK   sync.resolve 保留远端＝本地变成远端版本 | ok
-/tmp/sync_conf_local3.md: 1 file pushed, 0 skipped. 0.5 MB/s (48 bytes in 0.000s)
+/tmp/sync_conf_local3.md: 1 file pushed, 0 skipped. 0.6 MB/s (48 bytes in 0.000s)
 OK   sync.resolve 跳过之后下次还会报（S6） | [1, 1]
-     收尾后服务器随笔目录：fagui.md legacyboard-173657.md legacyboard-175129.md legacytest.md mergetest173134.md mergetest173401.md mergetest173657.md mergetest175129.md movetest173134.md movetest173401.md movetest173657.md movetest175129.md paper.md remoteonly.md shipin.md storetest.md t-e6373ce7.md web.md 
+     收尾后服务器随笔目录：fagui.md legacytest.md mergetest181443.md movetest181443.md paper.md shipin.md t-e6373ce7.md web.md 
 ---- 同步: OK=24 FAIL=0

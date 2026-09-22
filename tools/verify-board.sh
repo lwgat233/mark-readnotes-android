@@ -29,8 +29,15 @@ install_apk() {
   [ -f "$APK" ] || { echo "没有构件，先构建：gradle assembleDebug"; return 4; }
   sha256sum "$APK"
   # 装包前先证明构件里有启动类（源文件被写空时构建也会“成功”）
-  C=$(unzip -p "$APK" classes3.dex 2>/dev/null | strings | grep -c "Ldev/markreadnotes/MainActivity;")
-  [ "${C:-0}" -ge 1 ] || { echo "构件里没有 MainActivity，别装！"; return 4; }
+  # 注意：类落在哪个 dex 会随依赖变化（加了 OkHttp 之后从 classes3 挪到了 classes5），
+  # 所以要把所有 dex 都扫一遍 —— 写死文件名会误报“构件里没有 MainActivity”并让整轮验收不跑。
+  C=0
+  for f in $(unzip -Z1 "$APK" 2>/dev/null | grep '\.dex$'); do
+    n=$(unzip -p "$APK" "$f" 2>/dev/null | strings | grep -c "Ldev/markreadnotes/MainActivity;" || true)
+    C=$((C + n))
+  done
+  [ "${C:-0}" -ge 1 ] || { echo "构件里没有 MainActivity（扫了所有 dex），别装！"; return 4; }
+  echo "构件里有启动类（命中 $C 次）"
   $ADB install -r "$APK" 2>&1 | tail -1
   $ADB shell am force-stop $PKG >/dev/null
   $ADB shell am start -n $PKG/.MainActivity >/dev/null
