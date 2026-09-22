@@ -1,0 +1,10 @@
+归档构件：/vol1/1000/airesults/mark-readnotes/apk/mark-readnotes-debug-20260922-r8.apk
+80fec198a1751982a8d067e88dc8f1ce353314dfd9b850ac1d59bad0ee03b3ab  /vol1/1000/airesults/mark-readnotes/apk/mark-readnotes-debug-20260922-r8.apk
+BUILD SUCCESSFUL in 13s
+80fec198a1751982a8d067e88dc8f1ce353314dfd9b850ac1d59bad0ee03b3ab  /vol1/1000/aicache/buildtmp/mrn-repro/source/mark-readnotes/app/build/outputs/apk/debug/app-debug.apk
+条目名一致: True | 条目数: 89 89
+内容（CRC/大小）不一致的条目: 0 []
+整包 sha256 相同: True
+
+判定：内容一致（上面『不一致条目 0』）= 源码快照能重建这一版；
+      整包 sha256 不同是打包期的 zip 对齐/extra 字段差异，不是代码差异。

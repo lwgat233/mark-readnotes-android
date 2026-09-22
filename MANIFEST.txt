@@ -3,7 +3,7 @@ mark-readnotes.android（随笔）产物清单
 包名：dev.markreadnotes　　版本：0.1.0
 
 apk/mark-readnotes-debug-20260922-r8.apk      ← 当前构件（页内标记 0.1.0+r15，WebDAV 同步）
-  sha256 23742839f6bdc5ca1ecb392d9a2063b1caff029d4290796a063a08c97bd82089
+  sha256 80fec198a1751982a8d067e88dc8f1ce353314dfd9b850ac1d59bad0ee03b3ab（干净构建，整包可复现）
 apk/mark-readnotes-debug-20260922-r7.apk      ← 第 7 轮构件（页内标记 0.1.0+r12，一个标签＝一个文件）
   sha256 dde4385633da6cf507017a1ede35db077605c77d9933ee58a0036f65b6eb28fd
 apk/mark-readnotes-debug-20260922-r6.apk      ← 第 6 轮构件（页内标记 0.1.0+r11，随笔独立目录 + 文件夹）
@@ -67,6 +67,7 @@ evidence/
   构件哈希.txt / 构件哈希-r2..r8.txt                各版 apk 的 sha256
   board-summary-r8.txt                            六板块结果汇总（r8：11/29/38/10/10/24 = 122 条）
   board-sync.txt / dav-selftest.txt               第 8 轮同步板块原始输出 / WebDAV 服务自测（16 条）
+  verify-repro-r8.txt                             复现校验输出（条目级 0 不一致 + 整包 sha256 相同）
   r7-folder.txt                                   第 7 轮实测的文件夹内文件
   board-store.txt / board-settings.txt            最近一次存储与设置板块的原始输出（含 D5）
   coverage-r6.txt / page-coverage-r6.txt          覆盖自检（文件层面 / 界面自检读数）

@@ -39,5 +39,15 @@ print("内容（CRC/大小）不一致的条目:", len(bad), bad[:5])
 print("整包 sha256 相同:", open(A, 'rb').read() == open(B, 'rb').read())
 PY
 echo
-echo "判定：内容一致（上面『不一致条目 0』）= 源码快照能重建这一版；"
-echo "      整包 sha256 不同是打包期的 zip 对齐/extra 字段差异，不是代码差异。"
+if [ "$BAD" -eq 0 ]; then
+  echo "判定：源码快照能重建这一版（条目级 ${NAME_MATCH}，${TOTAL} 个条目）"
+  if [ "$WHOLE_SAME" = "True" ]; then
+    echo "      连整包 sha256 都相同 —— 这一版是完全可复现的。"
+  else
+    echo "      整包 sha256 不同属打包期 zip 对齐/extra 字段差异（条目级一致即算可复现）。"
+  fi
+else
+  echo "判定：**不可复现** —— 有 $BAD 个条目内容不一致（见上）。"
+  echo "      常见原因：归档那份是**增量构建**产物（工作目录里反复构建），dex 字节与干净构建不同。"
+  echo "      处置：清掉 app/build 从头构建一次，用那一份重新归档，再复跑一遍分板块验收。"
+fi

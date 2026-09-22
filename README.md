@@ -5,7 +5,7 @@
 
 - 包名 / applicationId：`dev.markreadnotes`　版本：`0.1.0`
 - 当前构件：`apk/mark-readnotes-debug-20260922-r8.apk`（页内标记 `0.1.0+r15`，WebDAV 同步）
-  sha256 `23742839f6bdc5ca1ecb392d9a2063b1caff029d4290796a063a08c97bd82089`
+  sha256 `80fec198a1751982a8d067e88dc8f1ce353314dfd9b850ac1d59bad0ee03b3ab`（**干净构建产物，整包可复现**）
   历史：`…-r7.apk`（一个标签＝一个文件）、`…-r6.apk`（随笔独立目录 + 文件夹）、`…-r5.apk`（渲染层重写）、`…-r4.apk`（重构）、`…-r3.apk`（导出）、`…-r2.apk`（公式/图片）、`…-20260922.apk`（第 1 轮闭环）
 - 笔记落在 `<授权根>/随笔/`（随笔板块自己的目录，与将来的其它板块平级）；文件归哪个文件夹由「标签 → 文件夹」映射决定
 - 渲染引擎（全部离线内置，来源与 integrity 校验留档）：markdown-it 14.1.0（MIT）+
