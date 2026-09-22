@@ -43,6 +43,7 @@ evidence/
 tools/
   webview-cdp.mjs               WebView 探针：eval / rect / tap / type / listeners
   netimg-server.py              网络图验收用的极简 HTTP 服务（把请求写进日志）
+  verify-repro.sh               复现校验：干净目录重建 + 条目级对比（口径见 docs/问题与需求登记.md P8）
 
 env/环境配方.txt                工具链、模拟器（AVD test35）、镜像源、复跑命令、踩过的坑
 

@@ -59,6 +59,14 @@ unzip -p app/build/outputs/apk/debug/app-debug.apk classes3.dex | strings | grep
 
 验证步骤见 `docs/验收清单-第1轮.md`、`docs/验收清单-第2轮.md`（起模拟器 → 装包 → 启动 → CDP 读真实状态）。
 
+## 复现校验（口径在问题登记 P8）
+
+```
+bash tools/verify-repro.sh          # 用 git 里的源码在干净目录重建，与 apk/ 最新构件比
+```
+实测：69 个条目逐条 CRC 一致（`内容不一致条目: 0`）→ 源码快照能重建这一版；
+**整包 sha256 不同**（打包期 zip 对齐/extra 字段差异，差 ~48KB），所以整包哈希只用于标识“交付的那一份”。
+
 ## 缺口
 
 导出、WebDAV、图片插入入口、标签筛选/搜索、外部控制口、列表懒加载都**还没做**，明细见 `docs/缺口清单.md`。
