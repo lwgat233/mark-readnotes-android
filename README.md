@@ -4,9 +4,11 @@
 原生层负责文件与索引。目前只有「随笔」一个板块，为以后加别的东西留了位置。
 
 - 包名 / applicationId：`dev.markreadnotes`　版本：`0.1.0`
-- 当前构件：`apk/mark-readnotes-debug-20260922-r4.apk`（页内标记 `0.1.0+r7`）
-  sha256 `5d1c3cabb416b530c04e749ed7a0e6bbcccd692abcd6bfbf4bcc832561f5dc17`
-  历史：`…-r3.apk`（导出）、`…-r2.apk`（公式/图片）、`…-20260922.apk`（第 1 轮闭环）
+- 当前构件：`apk/mark-readnotes-debug-20260922-r5.apk`（页内标记 `0.1.0+r9`，渲染层重写）
+  sha256 `2a92c6d8c5f6f9f0bd6908c77523c0350fd555378d2393bf6a254d318f5e6ddf`
+  历史：`…-r4.apk`（重构 + 分板块测试）、`…-r3.apk`（导出）、`…-r2.apk`（公式/图片）、`…-20260922.apk`（第 1 轮闭环）
+- 渲染引擎（全部离线内置，来源与 integrity 校验留档）：markdown-it 14.1.0（MIT）+
+  markdown-it-texmath 1.0.0（MIT）+ markdown-it-task-lists 2.1.1（ISC）+ KaTeX 0.18.7（MIT）
 - 构建：JDK 17 + Gradle 8.7 + Android SDK（compileSdk 34 / minSdk 26 / targetSdk 34）
 
 ## 文档索引
@@ -20,7 +22,8 @@
 | 第 2 轮怎么验的（公式/图片/消毒/层级） | `docs/验收清单-第2轮.md` |
 | 第 3 轮怎么验的（按标签导出/排除/预览/分享） | `docs/验收清单-第3轮.md` |
 | 第 4 轮怎么验的（重构 + 分板块测试） | `docs/验收清单-第4轮.md`、`docs/重构规格-第4轮.md`、`docs/覆盖自检.md` |
-| 渲染重构的规格与判据（下一轮） | `docs/渲染规格.md` |
+| 第 5 轮怎么验的（渲染重写，改造前后对照） | `docs/验收清单-第5轮.md`、`tools/fixtures/render-fixture.md` |
+| 渲染要满足什么（R1–R9 判据） | `docs/渲染规格.md` |
 | 哪些功能还在计划中（覆盖自检的输入） | `assets/ui/registry.js`（登记表）+ `docs/覆盖自检.md` |
 | 导出/导入的需求规格 | `docs/新需求规格-标签导出.md` |
 | 发现的问题与需求登记 | `docs/问题与需求登记.md` |

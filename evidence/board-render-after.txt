@@ -1,3 +1,7 @@
+模拟器已在线
+2a92c6d8c5f6f9f0bd6908c77523c0350fd555378d2393bf6a254d318f5e6ddf  /vol1/1000/airesults/mark-readnotes/source/mark-readnotes/app/build/outputs/apk/debug/app-debug.apk
+Success
+PID=5014 forward 就绪
 ==== 板块验收：渲染 ====
 OK   R1 标题 h2/h3/h4 各一 | [1, 1, 1]
 OK   R1 引用渲染 | 1
@@ -33,4 +37,5 @@ OK   R8 渲染耗时 < 400ms | True
 OK   R9 第三方许可声明在 | True
 OK   R9 内置库来源与校验留档 | True
 OK   render.link 点击后交给系统打开 | True
+---- 渲染: OK=29 FAIL=0
 ---- 渲染: OK=29 FAIL=0

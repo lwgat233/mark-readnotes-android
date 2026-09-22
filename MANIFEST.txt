@@ -1,8 +1,10 @@
 mark-readnotes.android（随笔）产物清单
-更新：2026-09-22（第 4 轮：按板块重构 + 分板块测试）
+更新：2026-09-22（第 5 轮：渲染层重写为内置 markdown-it 系）
 包名：dev.markreadnotes　　版本：0.1.0
 
-apk/mark-readnotes-debug-20260922-r4.apk      ← 当前构件（页内标记 0.1.0+r7，重构版 + 分板块测试）
+apk/mark-readnotes-debug-20260922-r5.apk      ← 当前构件（页内标记 0.1.0+r9，渲染层重写）
+  sha256 2a92c6d8c5f6f9f0bd6908c77523c0350fd555378d2393bf6a254d318f5e6ddf
+apk/mark-readnotes-debug-20260922-r4.apk      ← 第 4 轮构件（页内标记 0.1.0+r7，重构版 + 分板块测试）
   sha256 5d1c3cabb416b530c04e749ed7a0e6bbcccd692abcd6bfbf4bcc832561f5dc17
 apk/mark-readnotes-debug-20260922-r3.apk      ← 第 3 轮构件（页内标记 0.1.0+r5，按标签导出）
   sha256 165251ac41b0b3e6948bd66e63d34abef010271ad8366fbf7e55eba7b773eaf3
@@ -26,7 +28,10 @@ source/mark-readnotes/          可构建的源码树（不含 build/ 与本机 
     MainActivity.kt          只做装配与系统回调转发
   app/src/main/assets/ui/    前端 10 个文件：core / render（渲染器）/ sheet / home / board /
                              settings / export / registry（功能登记表）/ selfcheck（覆盖自检）/ boot
-  app/src/main/assets/ui/vendor/katex/  内置 KaTeX 0.18.7（离线）
+  app/src/main/assets/ui/vendor/markdown-it/             markdown-it 14.1.0（MIT，124KB）
+  app/src/main/assets/ui/vendor/markdown-it-texmath/     markdown-it-texmath 1.0.0（MIT，14KB）
+  app/src/main/assets/ui/vendor/markdown-it-task-lists/  markdown-it-task-lists 2.1.1（ISC，3KB）
+  app/src/main/assets/ui/vendor/katex/                   KaTeX 0.18.7（MIT，555KB，离线）
 
 docs/
   当前目标.md                   唯一权威：已完成/本轮/下一步、用户原话式需求、环境硬约束
@@ -46,7 +51,11 @@ docs/
   缺口清单.md                   还没做的（功能/交互/测试/已知限制）
 
 evidence/
-  构件哈希.txt / 构件哈希-r2.txt / 构件哈希-r3.txt / 构件哈希-r4.txt  各版 apk 的 sha256
+  构件哈希.txt / 构件哈希-r2.txt / 构件哈希-r3.txt / 构件哈希-r4.txt / 构件哈希-r5.txt  各版 apk 的 sha256
+  board-render-before.txt / board-render-after.txt  渲染层改造前后的同一份判据（16绿11红 → 29绿0红）
+  vendor-provenance.txt                            三个内置库的来源与 integrity 校验结果
+  vendor-LICENSES.txt / katex-LICENSE-MIT.txt      内置库的许可全文
+  page-coverage-r5.txt                             界面自检读数（五类缺口全空）
   board-{notes,render,store,export,settings}.txt   第 4 轮分板块验收的原始输出
   board-summary-r4.txt                             五板块结果汇总
   coverage-r4.txt / page-coverage-r4.txt           覆盖自检（文件层面 / 界面自检读数）
@@ -64,6 +73,8 @@ evidence/
 tools/
   webview-cdp.mjs               WebView 探针：eval / rect / tap（会先滚进视野）/ type / listeners
   netimg-server.py              网络图验收用的极简 HTTP 服务（把请求写进日志）
+  fetch_vendor.py               拉取内置前端库：校验 npm 声明的 integrity → 装进 assets/ui/vendor
+  fixtures/render-fixture.md    渲染判据用的固定文本（R1–R9 都覆盖）
   verify-board.sh               分板块验收跑法（一次一个板块；缺省跑完停模拟器回收内存）
   boards/_lib.sh                分板块验收公共库（断言/取值/重新聚焦应用/日志计数）
   boards/{notes,render,store,export,settings}.sh   各板块的检查清单

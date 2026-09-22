@@ -1,0 +1,21 @@
+渲染层内置前端库的来源与校验（照 KaTeX 的做法）
+
+markdown-it 14.1.0
+  许可: MIT
+  来源: https://cdn.npmmirror.com/packages/markdown-it/14.1.0/markdown-it-14.1.0.tgz
+  tarball sha256: 7c4fab4d4d39fe98206a7fbbed4b1e3578f2b70b6b69d309413e33eec140e19f
+  与 npm 声明的 integrity(sha512) 一致: True
+  装入: vendor/markdown-it/markdown-it.min.js (123618 字节)
+markdown-it-texmath 1.0.0
+  许可: MIT
+  来源: https://cdn.npmmirror.com/packages/markdown-it-texmath/1.0.0/markdown-it-texmath-1.0.0.tgz
+  tarball sha256: afca1f328047ecd9a121ed3148232b91166c374766011c8f85372a7a0d18c2b3
+  与 npm 声明的 integrity(sha512) 一致: True
+  装入: vendor/markdown-it-texmath/texmath.js (14071 字节)
+  装入: vendor/markdown-it-texmath/texmath.css (441 字节)
+markdown-it-task-lists 2.1.1
+  许可: ISC
+  来源: https://cdn.npmmirror.com/packages/markdown-it-task-lists/2.1.1/markdown-it-task-lists-2.1.1.tgz
+  tarball sha256: 8e9ed515296f11d716a6460c0bd35ffa163003a373a6d8f65d53ea9f8aec667e
+  与 npm 声明的 integrity(sha512) 一致: True
+  装入: vendor/markdown-it-task-lists/markdown-it-task-lists.min.js (2702 字节)

@@ -17,11 +17,19 @@
 
 ## 直接内置的第三方库
 
-### markdown-it（MIT，计划第 4 轮引入）
+### markdown-it 14.1.0（MIT）· markdown-it-texmath 1.0.0（MIT）· markdown-it-task-lists 2.1.1（ISC）
 
-- **用途**：替换自写的 markdown 渲染器（表格、嵌套列表、任务清单等）
-- 计划一同引入：`markdown-it-texmath`（MIT）、`markdown-it-task-lists`（MIT）
-- 引入时照 KaTeX 的做法：离线内置到 `assets/ui/vendor/`，校验 npm 声明的 integrity，来源与哈希记进 `evidence/`
+- **用途**：渲染层的 markdown 引擎（表格、嵌套列表、任务清单）与公式分隔符解析
+- **位置**：`source/mark-readnotes/app/src/main/assets/ui/vendor/{markdown-it,markdown-it-texmath,markdown-it-task-lists}/`
+  （离线内置，不联网）
+- **获取方式**：从 npm 镜像拉 tarball，并**校验过 npm 声明的 `dist.integrity`（sha512）三个包全部一致**：
+  来源与 tarball sha256 见 `evidence/vendor-provenance.txt`，拉取脚本 `tools/fetch_vendor.py`
+- **改动说明（与上游不同之处，均为本项目有意为之，代码里也写了注释）**：
+  1) 不用 texmath 自带的 `<eq>/<section>` 模板，改由 KaTeX 直接产出公式 HTML（四条分隔符规则都重绑）；
+  2) 未链接 texmath 的 CSS（`texmath.css` 随包保留，因为模板已被替换）；
+  3) 消毒分成两层：`html_block` 走白名单，行内 HTML 交给「整段解析后整体消毒」
+     （逐 token 消毒会把成对标签拆散，见 `docs/问题与需求登记.md` P15）
+- **许可全文**：`evidence/vendor-LICENSES.txt`
 
 ### KaTeX 0.18.7（MIT）
 
@@ -41,5 +49,6 @@
 
 ## 其它
 
-- 前端（`assets/ui/app.js`、`app.css`、`index.html`）与 markdown 渲染器均为本项目自己写的，无第三方依赖
+- 前端（`assets/ui/*.js`、`app.css`、`index.html`）、原生层与「块 → 标签 → 文件」的读写规则都是本项目自己写的；
+  只有渲染引擎与公式渲染用上面列出的内置库（markdown-it 系 + KaTeX），全部离线、不联网
 - 构建工具链（Gradle / AGP / Kotlin 编译器）不随产物分发

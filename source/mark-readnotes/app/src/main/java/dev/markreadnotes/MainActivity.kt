@@ -16,7 +16,7 @@ import dev.markreadnotes.shell.WebShell
 class MainActivity : Activity() {
 
     companion object {
-        private const val BUILD_TAG = "0.1.0+r7"
+        private const val BUILD_TAG = "0.1.0+r9"
     }
 
     private lateinit var store: Store

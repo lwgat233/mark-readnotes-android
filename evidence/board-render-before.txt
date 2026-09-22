@@ -1,0 +1,44 @@
+启动模拟器（AVD test35）…
+List of devices attached
+emulator-5554	device
+
+模拟器就绪
+5d1c3cabb416b530c04e749ed7a0e6bbcccd692abcd6bfbf4bcc832561f5dc17  /vol1/1000/airesults/mark-readnotes/source/mark-readnotes/app/build/outputs/apk/debug/app-debug.apk
+Success
+PID=2570 forward 就绪
+==== 板块验收：渲染 ====
+OK   R1 标题 h2/h3/h4 各一 | [1, 1, 1]
+FAIL R1 引用渲染 | got=2 want=1
+OK   R1 粗体渲染 | True
+FAIL R1 表格渲染 | got=0 want=1
+FAIL R1 表头单元格数 | got=0 want=3
+FAIL R1 表体单元格数 | got=0 want=6
+FAIL R2 任务清单 checkbox 数 | got=0 want=2
+FAIL R2 已勾选数 | got=0 want=1
+FAIL R3 有嵌套列表 | got=False want=True
+OK   R3 有序列表渲染 | True
+FAIL R3 嵌套层级 ≥2 | got=False want=True
+FAIL R4 公式总数（四写法） | got=3 want=4
+FAIL R4 KaTeX 渲染成功数 ≥4 | got=false want=True
+OK   R4 公式报错数 | 0
+     公式读数：{"total":3,"ok":3,"failed":0}
+OK   R5 脚本标签已移除 | 0
+OK   R5 事件属性已剥掉 | 0
+OK   R5 放行的 div 保留 | 1
+OK   R5 details 保留 | 1
+OK   R5 保留的内联样式仍生效 | rgb(255, 0, 0)
+OK   R5 没被注入 | 未注入
+     消毒读数：{'removedTags': 1, 'removedAttrs': 1}
+OK   R6 代码块渲染 | 1
+OK   R6 代码块内不解析语法 | 0
+     代码块原文：代码块里的 # 与 $ 不解析
+OK   R7 markdown 图片已加载 | True
+FAIL R7 原始 HTML 图片已加载 | got=False want=True
+     图片：[('pic.png', 64), ('pic.png', 0)]
+     渲染读数：null
+     （这一版还没有耗时读数：R8 属于新渲染器）
+OK   R9 第三方许可声明在 | True
+OK   R9 内置库来源与校验留档 | True
+OK   render.link 点击后交给系统打开 | True
+---- 渲染: OK=16 FAIL=11
+---- 渲染: OK=16 FAIL=11

@@ -1,6 +1,6 @@
 ==== 板块验收：随笔 ====
 OK   notes.home 卡片数=索引块数 | 7
-     页面版本标记 build=0.1.0+r6
+     页面版本标记 build=0.1.0+r9
 OK   notes.board 白板宽=可视宽 | 412
 OK   notes.board 白板高=可视高 | 530
 OK   notes.board 白板贴顶(y=0) | 0

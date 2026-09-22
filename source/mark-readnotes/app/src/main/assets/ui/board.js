@@ -78,9 +78,7 @@ function setPreview(on) {
   el('ed-body').classList.toggle('hidden', previewOn);
   el('btn-preview').textContent = previewOn ? '编辑' : '预览';
   if (previewOn) {
-    el('preview').innerHTML = renderMd(el('ed-body').value);
-    sanitizePreview(el('preview'));
-    renderTex();
+    renderInto(el('preview'), el('ed-body').value);
   }
 }
 
