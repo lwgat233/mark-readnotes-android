@@ -83,8 +83,14 @@ switch (cmd) {
     out(await evaluate(rectExpr(argv[1])));
     break;
   case 'tap': {
+    // 先把元素滚进视野再量坐标：浮层里可滚动区域的键常常在屏幕外，
+    // 直接按 rect 点会得到 "Position out of bounds"（看起来像按钮坏了，其实只是没滚到）
+    await evaluate(`(()=>{const e=document.querySelector(${SEL(argv[1])}); if(e&&e.scrollIntoView) e.scrollIntoView({block:'center'}); return true;})()`);
+    await new Promise((r) => setTimeout(r, 250));
     const r = await evaluate(rectExpr(argv[1]));
     if (!r || !r.visible) die('点不到：元素不存在或不可见 ' + argv[1], 2);
+    const inView = r.cx >= 0 && r.cy >= 0 && r.cx <= r.vw && r.cy <= r.vh;
+    if (!inView) die(`点不到：元素在可视区外 (${r.cx},${r.cy}) 视口 ${r.vw}x${r.vh} —— 先滚动或检查布局`, 2);
     await cdp.send('Input.synthesizeTapGesture', { x: r.cx, y: r.cy, duration: 60, tapCount: 1, gestureSourceType: 'touch' });
     out({ tapped: argv[1], at: [r.cx, r.cy] });
     break;

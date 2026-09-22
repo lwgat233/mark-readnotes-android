@@ -1,0 +1,17 @@
+==== 板块验收：渲染 ====
+OK   render.md h2 渲染 | 1
+OK   render.md h3 渲染 | 1
+OK   render.md 列表项 ≥1 | True
+OK   render.md 引用渲染 | 1
+OK   render.md 代码块渲染 | 1
+OK   render.md 粗体渲染 | True
+OK   render.tex 公式总数 | 2
+OK   render.tex 渲染成功数 | 2
+OK   render.tex KaTeX 元素数 | 2
+OK   render.img 本地图已加载 | True
+     图片: [('pic.png', 64), ('pic.png', 0)]
+OK   render.sanitize 脚本标签已移除 | 0
+OK   render.sanitize 事件属性已剥掉 | 0
+OK   render.sanitize 没被注入 | 未注入
+OK   render.link 点击后交给系统打开 | True
+---- 渲染: OK=14 FAIL=0

@@ -1,0 +1,8 @@
+==== 板块验收：设置 ====
+OK   settings.root 有笔记根这一行 | 笔记根
+OK   settings.root 有文件/块计数行 | 文件 / 块
+OK   settings.root 有最近扫描时间行 | 最近扫描
+     刷新结果：{"files":5,"blocks":7}
+OK   settings.refresh 回包里有文件数 | True
+OK   settings.refresh 主动刷新时才 walk | True
+---- 设置: OK=5 FAIL=0

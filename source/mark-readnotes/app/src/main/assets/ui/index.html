@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="vendor/katex/katex.min.css">
 <script src="vendor/katex/katex.min.js"></script>
 </head>
-<body data-build="0.1.0+r5">
+<body data-build="0.1.0+r7">
 
 <!-- 主页：最近编辑的块 -->
 <div id="home">
@@ -55,6 +55,16 @@
 </div>
 
 <div id="toast" class="toast hidden"></div>
-<script src="app.js"></script>
+<!-- 按板块加载：核心 → 渲染 → 小窗 → 各板块 → 登记表 → 自检 → 启动装配（顺序不能乱） -->
+<script src="core.js"></script>
+<script src="render.js"></script>
+<script src="sheet.js"></script>
+<script src="home.js"></script>
+<script src="board.js"></script>
+<script src="settings.js"></script>
+<script src="export.js"></script>
+<script src="registry.js"></script>
+<script src="selfcheck.js"></script>
+<script src="boot.js"></script>
 </body>
 </html>

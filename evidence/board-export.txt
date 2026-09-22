@@ -1,0 +1,15 @@
+==== 板块验收：导出 ====
+     计划：['web/(1)', 'paper/(2)', '法规/标准/(1)', '法规/2024/(1)', '视频/RAG/(1)', 'unsorted/(1)']
+OK   export.opts 有文件可导 | True
+OK   export.opts 目录数 ≥1 | True
+OK   export.exclude 有块被排除 | True
+OK   export.exclude 文件数变少 | True
+OK   export.preview 列出目录 ≥1 | True
+OK   export.preview 预览没有改动磁盘 | 6
+     提示："已导出 7 个文件（新建 0，更新 7）到 Documents/mark-readnotes-export"
+OK   export.write 盘上有 md 文件 | True
+OK   export.write 没有 -2 之类的副本 | 0
+点不到：元素不存在或不可见 #ex-preview
+OK   export.share 发起了系统分享 | True
+OK   export.share 前台是系统选择器 | True
+---- 导出: OK=10 FAIL=0

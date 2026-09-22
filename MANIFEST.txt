@@ -1,8 +1,10 @@
 mark-readnotes.android（随笔）产物清单
-更新：2026-09-22（第 3 轮：按标签导出）
+更新：2026-09-22（第 4 轮：按板块重构 + 分板块测试）
 包名：dev.markreadnotes　　版本：0.1.0
 
-apk/mark-readnotes-debug-20260922-r3.apk      ← 当前构件（页内标记 0.1.0+r5，按标签导出）
+apk/mark-readnotes-debug-20260922-r4.apk      ← 当前构件（页内标记 0.1.0+r7，重构版 + 分板块测试）
+  sha256 5d1c3cabb416b530c04e749ed7a0e6bbcccd692abcd6bfbf4bcc832561f5dc17
+apk/mark-readnotes-debug-20260922-r3.apk      ← 第 3 轮构件（页内标记 0.1.0+r5，按标签导出）
   sha256 165251ac41b0b3e6948bd66e63d34abef010271ad8366fbf7e55eba7b773eaf3
 apk/mark-readnotes-debug-20260922-r2.apk      ← 第 2 轮构件（页内标记 0.1.0+r4）
   sha256 e2a355781fd6de6aedcee9673d76f8269958602cbca9f1236f10360a340d46c9
@@ -12,16 +14,19 @@ apk/mark-readnotes-debug-20260922.apk         ← 第 1 轮构件（页内标记
 source/mark-readnotes/          可构建的源码树（不含 build/ 与本机 local.properties）
   build.gradle.kts / settings.gradle.kts / gradle.properties
     AGP 8.4.2 / Kotlin 1.9.24；仓库走阿里云镜像；低堆 + 不用 daemon
-  app/src/main/java/dev/markreadnotes/
-    MainActivity.kt   WebView 壳（http 虚拟源、assets 与 /file/ 图片拦截、JS 桥、SAF 选择器、返回键）
-    Ops.kt            op 层（一套接口给界面与后续外部控制口）
-    Repo.kt           读写中枢（懒扫描、写回、搬家、图片按笔记根解析）
-    Db.kt             SQLite（索引 + 最近编辑顺序）
-    Md.kt             块切分 / 标签判定 / 写回渲染
-    Saf.kt            SAF 读写
-    Logs.kt           环形日志（验收读回来用）
-  app/src/main/assets/ui/            前端：index.html / app.css / app.js（自带 markdown 渲染 + HTML 消毒）
-  app/src/main/assets/ui/vendor/katex/  内置 KaTeX 0.18.7（离线；js + 裁剪 css + 20 个 woff2）
+  app/src/main/java/dev/markreadnotes/        18 个 Kotlin 文件（第 4 轮按板块拆过）
+    Store.kt                 公共底层：SQLite 句柄 + SAF 句柄 + root()
+    Db.kt / Md.kt / Saf.kt / Logs.kt   一份数据一处：表结构 / 块解析 / SAF 读写 / 环形日志
+    notes/NotesRepo.kt       随笔本体：读写、搬家、扫描索引、图片解析
+    export/ExportRepo.kt     导出板块：规则、预览、写盘、分享准备
+    ops/OpsRouter.kt + AppOps/SourceOps/BlockOps/ExportOps/UiOps/JsonArgs   一个板块一个文件
+    shell/WebShell.kt        壳：assets 映射、JS 桥、图片拦截、返回键
+    shell/SafPicker.kt       目录授权（笔记根 / 导出根）
+    shell/ShareIntent.kt     FileProvider 一次性授权分享
+    MainActivity.kt          只做装配与系统回调转发
+  app/src/main/assets/ui/    前端 10 个文件：core / render（渲染器）/ sheet / home / board /
+                             settings / export / registry（功能登记表）/ selfcheck（覆盖自检）/ boot
+  app/src/main/assets/ui/vendor/katex/  内置 KaTeX 0.18.7（离线）
 
 docs/
   当前目标.md                   唯一权威：已完成/本轮/下一步、用户原话式需求、环境硬约束
@@ -30,12 +35,22 @@ docs/
   验收清单-第1轮.md              F1–F7 可复跑命令与实测值
   验收清单-第2轮.md              F8–F12 可复跑命令与实测值
   验收清单-第3轮.md              F13–F18（按标签导出/排除/预览/写目录/分享）可复跑命令与实测值
-  新需求规格-标签导出.md         导出与导入的规则、界面、判据（导入待下一轮）
-  问题与需求登记.md             P1–P9 现象/根因/修法/证据（含我自己写空源文件的事故、导入冲突待定）
+  验收清单-第4轮.md              分板块测试结果（五板块 47 条全绿）+ 覆盖自检读数
+  重构规格-第4轮.md              按板块拆文件的对照表、分板块测试跑法、脚本纪律
+  覆盖自检.md                    登记表 vs 界面 vs 测试映射：七类缺口与最近一次结果
+  渲染规格.md                    第 5 轮要做的渲染重写（目标 + R1–R9 判据）
+  新需求规格-标签导出.md         导出与导入的规则、界面、判据（导入待定）
+  新需求规格-随笔独立目录.md     随笔独立目录 + 文件夹（隔离、迁移三步）
+  参考与改进计划-KardLeaf.md     参考 waikr/KardLeaf 的功能对照表与合规规矩
+  问题与需求登记.md             P1–P12 现象/根因/修法/证据（含我自己写空源文件的事故、验收脚本的假红来源）
   缺口清单.md                   还没做的（功能/交互/测试/已知限制）
 
 evidence/
-  构件哈希.txt / 构件哈希-r2.txt / 构件哈希-r3.txt  各版 apk 的 sha256
+  构件哈希.txt / 构件哈希-r2.txt / 构件哈希-r3.txt / 构件哈希-r4.txt  各版 apk 的 sha256
+  board-{notes,render,store,export,settings}.txt   第 4 轮分板块验收的原始输出
+  board-summary-r4.txt                             五板块结果汇总
+  coverage-r4.txt / page-coverage-r4.txt           覆盖自检（文件层面 / 界面自检读数）
+  source-tree-r4.txt                               第 4 轮拆分后的源码文件树
   验收清单-第1轮数据.txt             第 1 轮原始读数（工具原样输出）
   logcat-r1.txt / logcat-r2.txt / logcat-r3.txt   运行日志（scan=skipped / img.serve / exp.plan|write|share）
   r3-export-tree.txt / r3-export-sample.md        第 3 轮导出目录树与抽样文件
@@ -47,9 +62,15 @@ evidence/
   r2-imgs/                                                        验收用 PNG（pic.png / two.png / net/）
 
 tools/
-  webview-cdp.mjs               WebView 探针：eval / rect / tap / type / listeners
+  webview-cdp.mjs               WebView 探针：eval / rect / tap（会先滚进视野）/ type / listeners
   netimg-server.py              网络图验收用的极简 HTTP 服务（把请求写进日志）
-  verify-repro.sh               复现校验：干净目录重建 + 条目级对比（口径见 docs/问题与需求登记.md P8）
+  verify-board.sh               分板块验收跑法（一次一个板块；缺省跑完停模拟器回收内存）
+  boards/_lib.sh                分板块验收公共库（断言/取值/重新聚焦应用/日志计数）
+  boards/{notes,render,store,export,settings}.sh   各板块的检查清单
+  check_coverage.py             覆盖自检（登记表 vs 测试脚本），--strict 可当门禁
+  refactor_split_repo.py        第 4 轮：把 Repo.kt 机械切分成 notes/ 与 export/
+  refactor_split_ui.py          第 4 轮：把 app.js 机械切分成 8 个前端文件
+  verify-repro.sh               复现校验：干净目录重建 + 条目级对比（口径见问题登记 P8）
 
 env/环境配方.txt                工具链、模拟器（AVD test35）、镜像源、复跑命令、踩过的坑
 

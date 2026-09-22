@@ -4,9 +4,9 @@
 原生层负责文件与索引。目前只有「随笔」一个板块，为以后加别的东西留了位置。
 
 - 包名 / applicationId：`dev.markreadnotes`　版本：`0.1.0`
-- 当前构件：`apk/mark-readnotes-debug-20260922-r3.apk`（页内标记 `0.1.0+r5`）
-  sha256 `165251ac41b0b3e6948bd66e63d34abef010271ad8366fbf7e55eba7b773eaf3`
-  历史：`…-r2.apk`（`0.1.0+r4`，公式/图片）、`…-20260922.apk`（`0.1.0+r1`，第 1 轮闭环）
+- 当前构件：`apk/mark-readnotes-debug-20260922-r4.apk`（页内标记 `0.1.0+r7`）
+  sha256 `5d1c3cabb416b530c04e749ed7a0e6bbcccd692abcd6bfbf4bcc832561f5dc17`
+  历史：`…-r3.apk`（导出）、`…-r2.apk`（公式/图片）、`…-20260922.apk`（第 1 轮闭环）
 - 构建：JDK 17 + Gradle 8.7 + Android SDK（compileSdk 34 / minSdk 26 / targetSdk 34）
 
 ## 文档索引
@@ -19,6 +19,9 @@
 | 第 1 轮怎么验的（授权→编辑→搬家→懒扫描） | `docs/验收清单-第1轮.md` |
 | 第 2 轮怎么验的（公式/图片/消毒/层级） | `docs/验收清单-第2轮.md` |
 | 第 3 轮怎么验的（按标签导出/排除/预览/分享） | `docs/验收清单-第3轮.md` |
+| 第 4 轮怎么验的（重构 + 分板块测试） | `docs/验收清单-第4轮.md`、`docs/重构规格-第4轮.md`、`docs/覆盖自检.md` |
+| 渲染重构的规格与判据（下一轮） | `docs/渲染规格.md` |
+| 哪些功能还在计划中（覆盖自检的输入） | `assets/ui/registry.js`（登记表）+ `docs/覆盖自检.md` |
 | 导出/导入的需求规格 | `docs/新需求规格-标签导出.md` |
 | 发现的问题与需求登记 | `docs/问题与需求登记.md` |
 | 还没做的（= 开发不足清单） | `docs/缺口清单.md` |
@@ -68,6 +71,18 @@ bash tools/verify-repro.sh          # 用 git 里的源码在干净目录重建�
 ```
 实测：69 个条目逐条 CRC 一致（`内容不一致条目: 0`）→ 源码快照能重建这一版；
 **整包 sha256 不同**（打包期 zip 对齐/extra 字段差异，差 ~48KB），所以整包哈希只用于标识“交付的那一份”。
+
+## 分板块测试（内存不够，就一次跑一个板块）
+
+```
+bash tools/verify-board.sh list           # 列出板块与功能
+bash tools/verify-board.sh notes          # 只跑随笔板块（跑完停模拟器回收内存）
+bash tools/verify-board.sh all            # 串行跑五个板块
+python3 tools/check_coverage.py --strict  # 覆盖自检（登记 vs 测试脚本），无阻塞缺口返回 0
+```
+
+板块 = 随笔 / 渲染 / 存储 / 导出 / 设置（计划中：同步）。功能登记表在
+`source/mark-readnotes/app/src/main/assets/ui/registry.js`，界面与自检都读它。
 
 ## 缺口
 

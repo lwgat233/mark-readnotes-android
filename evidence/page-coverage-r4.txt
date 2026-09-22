@@ -1,0 +1,1 @@
+{"gaps":{"noBoard":[],"emptyBoard":[],"uiEmptyBoard":[],"notMounted":[],"noTest":[],"planned":["store.folder","sync.webdav"]},"total":2,"boards":6,"features":23}
