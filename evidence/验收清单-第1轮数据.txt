@@ -1,0 +1,81 @@
+第 1 轮验收原始读数（每行都是工具原样输出，未加工）
+构件：apk/mark-readnotes-debug-20260922.apk
+sha256 4f7158c91c9556ba282fc609b13392eb515410c2b3a37190a8f7fc3551a6cc0f
+设备：emulator-5554（AVD test35）
+
+--- 首启（未授权）页面自报状态 ---
+{"build":"0.1.0+r1","bridge":true,"boardOpen":false,"boardId":null,
+ "boardRect":{"x":0,"y":850.7086181640625,"w":412.19049072265625,"h":842.2858276367188},
+ "cards":0,"src":{"has":false},"previewOn":false}
+（boardRect.y=850 ≈ 视口高 → 白板此时收在屏幕下方，未打开）
+
+--- F1 授权 Documents 后的日志 ---
+07:27:41.495 I markreadnotes: saf.mkdir name=mark-readnotes
+07:27:41.539 I markreadnotes: src.attach picked=Documents rootDocId=primary:Documents/mark-readnotes
+07:27:41.560 I markreadnotes: scan=walk(files=0,changed=0,ms=18)
+（首次授权只扫一次；`ls /sdcard/Documents/mark-readnotes` → total 0）
+
+--- F2 新建块后落盘的 md（原样 cat） ---
+# 视频随手记：KV Cache 那期
+#unsortedweb
+看了 B 站那期讲 KV Cache 的视频，笔记如下：
+
+- 显存占用主要来自 KV 缓存
+- **分页**是关键
+
+参考：[论文](https://arxiv.org/abs/2309.06180)
+（注：#unsortedweb 是测试脚本把标签粘在预填值后面造成的，P1 已修）
+
+--- F2 首次落库（SQLite 原样） ---
+source: (1,'content://com.android.externalstorage.documents/tree/primary%3ADocuments',
+        'primary:Documents/mark-readnotes','Documents','saf',1790062061520,1790062061554)
+note_file: (1,1,'…unsortedweb.md','primary:Documents/mark-readnotes/unsortedweb.md','unsortedweb.md','unsortedweb',221,1790062072852,1790062072978,1)
+block: (1,1,'…unsortedweb.md','视频随手记：KV Cache 那期','unsortedweb','unsortedweb','看了 B 站那期讲 KV Cache 的视频，笔记如下：…','# 视频随手记…\n#unsortedweb\n…',101,0,1790062072959,1790062072852,221,1)
+
+--- F3 主页卡片几何（高度上限 148px） ---
+{"x":12,"y":71.53571319580078,"w":388.19049072265625,"h":145.76785278320312,
+ "cx":206,"cy":144,"vw":412,"vh":842,"visible":true}
+[{"head":"PagedAttention 论文要点","tag":"#paper","h":124},
+ {"head":"视频随手记：KV Cache 那期","tag":"#web","h":148}]
+
+--- F4 白板几何（点卡片打开时） ---
+{"x":0,"y":0,"w":412.19049072265625,"h":842.2857055664062}
+（另有新块路径：聚焦标题后键盘弹起，{"x":0,"y":0,"w":412.19,"h":530.29,"vw":412,"vh":530} → 白板始终=可视区整屏）
+
+--- F5 改第一个标签 = 搬家 ---
+改前：{"heading":"视频随手记：KV Cache 那期","tags":"unsortedweb","hint":"归属文件：unsortedweb.md"}
+点入标签框后输入 web：document.getElementById("ed-tags").value === "web"
+改后目录：-rw-rw---- 1 u0_a188 media_rw 213 web.md      （unsortedweb.md 已消失）
+改后 web.md：# 视频随手记：KV Cache 那期 / #web / 正文…
+改后 SQLite：note_file [(2,'web.md','web',213,1)]  block [(1,2,'视频随手记：KV Cache 那期','web',0,1790062126420)]
+→ block.id 仍为 1，file_id 由 1 → 2，updated_at 前移
+
+--- F6 懒扫描 ---
+冷启动：07:30:35.081 I markreadnotes: app.start build=0.1.0+r1 scan=skipped(reason=startup)
+       07:30:35.0xx I markreadnotes: idx.state={"has":true,…,"files":2,"blocks":2,"lastScanAt":1790062061554}
+       （lastScanAt 仍是授权那次 = 1790062061554，冷启动没改写它）
+外部追加后打开块：
+       07:30:38.878 I markreadnotes: scan=single(file=paper.md,state=unchanged)
+       07:28:56.544 I markreadnotes: scan=single(file=web.md,state=changed)
+       document.getElementById("ed-body").value → "…/2309.06180)\n\n外部追加的一行（模拟电脑上改的）"
+整轮 logcat 里 scan=walk 出现 0 次（只有授权那一次，早已在清 log 前）
+
+--- F7 归档与正文隔离 ---
+{"archClass":"b-arch","headText":"视频随手记：KV Cache 那期","tagsText":"#unsortedweb",
+ "bodyText":"看了 B 站那期讲 KV Cache 的视频，笔记如下： 显存占用主要来自 KV","bodyContainsHeading":false}
+
+--- 附加：死键扫描 / 跳转 / 渲染 / 返回键 / 设置小窗 ---
+listeners '#btn-new' → ["click"]      listeners '#btn-settings' → ["click"]
+listeners '#btn-done' → ["click"]     listeners '#sheet-close' → ["click"]
+点预览里的链接 → 07:29:27.132 I markreadnotes: ui.open url=https://arxiv.org/abs/2309.06180
+系统可接：ActivityInfo name=com.google.android.apps.chrome.IntentDispatcher
+预览渲染：<p>论文的核心是把 KV 缓存<strong>分页</strong>管理。</p>\n<h2>三个看点</h2>\n<ol>…</ol>\n<blockquote>引用自论文摘要</blockquote>\n<p><img alt="图" src="https://example.com/x.png"></p>
+返回键：07:30:45.659 back.enter → 07:30:45.690 back.js="1" handled=true finished=false
+        之后 window.mrState().boardOpen = false，进程仍在（pid 5198）
+设置小窗：{"open":true,"rows":["笔记根Documents/mark-readnotes","文件 / 块2 / 2",
+          "最近扫描9/22/2026, 7:27:41 AM","刷新索引","重新选择目录","关闭"]}
+
+--- 第二轮修 P1 后的复验（标签不再粘） ---
+新块标签框预填 = 上次用过的标签（实测 "web"），点入即全选；输入 "paper" 后落盘 paper.md。
+文件 / 块 = 2 / 2；note_file [(2,'web.md','web'),(3,'paper.md','paper')]；
+block [(1,2,'视频随手记：KV Cache 那期','web'),(2,3,'PagedAttention 论文要点','paper')]

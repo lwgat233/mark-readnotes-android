@@ -1,0 +1,44 @@
+mark-readnotes.android（随笔）第 1 轮产物清单
+生成时间：2026-09-22
+包名：dev.markreadnotes　　版本：0.1.0（页面 build 0.1.0+r1）
+
+apk/mark-readnotes-debug-20260922.apk
+  sha256 4f7158c91c9556ba282fc609b13392eb515410c2b3a37190a8f7fc3551a6cc0f
+  大小 1,275,133 字节（构建时）
+
+source/mark-readnotes/          可构建的源码树（不含 build/ 与本机 local.properties）
+  build.gradle.kts              插件版本：AGP 8.4.2 / Kotlin 1.9.24
+  settings.gradle.kts           仓库走阿里云镜像（本机 google() 不可达）
+  gradle.properties             低堆 + 不用 daemon（宿主内存紧张）
+  app/src/main/java/dev/markreadnotes/
+    MainActivity.kt             WebView 壳、assets 映射、JS 桥、SAF 选择器、返回键
+    Ops.kt                      op 层（一套接口给界面与后续外部控制口）
+    Repo.kt                     读写中枢（懒扫描、写回、搬家）
+    Db.kt                       SQLite（索引 + 最近编辑顺序）
+    Md.kt                       块切分 / 标签判定 / 写回渲染
+    Saf.kt                      SAF 读写
+    Logs.kt                     环形日志（验收读回来用）
+  app/src/main/assets/ui/       前端（index.html / app.css / app.js，无外部依赖）
+
+docs/
+  当前目标.md                   唯一权威：本轮做什么、判据、下一步
+  功能规格.md                   功能 ↔ 板块 ↔ 按键 ↔ 判据
+  数据模型.md                   块/文件划分规则、SQLite 结构、懒扫描
+  验收清单-第1轮.md             F1–F7 的可复跑命令与实测值
+  问题与需求登记.md             P1–P4 现象/根因/修法/证据 + 待做需求
+  缺口清单.md                   还没做的（功能/交互/测试/已知限制）
+
+evidence/
+  构件哈希.txt                  apk sha256
+  验收清单-第1轮数据.txt        （见 docs/验收清单-第1轮.md 内嵌实测值）
+  logcat-r1.txt                 运行日志（scan=skipped / scan=single / back.js 等原始行）
+  notes.db                      授权后首次扫描时的 SQLite 快照
+  notes-after-move.db           改标签搬家后的 SQLite 快照
+  notes-final.db                两个块两个文件时的 SQLite 快照
+  apk-sha256.txt                首次安装构件的哈希
+
+tools/webview-cdp.mjs           WebView 探针：eval / rect / tap / type / listeners
+
+env/环境配方.txt                工具链、模拟器、镜像源、复跑命令
+
+未纳入归档：构建产物 build/、Gradle 缓存、本机 local.properties、任何密钥与口令。

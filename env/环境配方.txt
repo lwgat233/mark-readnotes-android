@@ -1,0 +1,46 @@
+mark-readnotes 环境配方（2026-09-22 实测可用）
+=============================================
+
+工具链（都已在本机，无需联网重装）
+  JDK      /home/lwgat/tools/jdk-17.0.2
+  Gradle   /home/lwgat/tools/gradle-8.7
+  Android  /home/lwgat/tools/android-sdk （platforms;android-34、build-tools;34.0.0、
+           platform-tools、emulator、system-images;android-34;google_apis;x86_64）
+
+构建（唯一入口）
+  export JAVA_HOME=/home/lwgat/tools/jdk-17.0.2
+  export ANDROID_HOME=/home/lwgat/tools/android-sdk
+  unset ANDROID_SDK_ROOT            # 两个变量并存且不一致时 Gradle 直接拒跑
+  cd source/mark-readnotes
+  /home/lwgat/tools/gradle-8.7/bin/gradle assembleDebug --no-daemon \
+      -Pkotlin.compiler.execution.strategy=in-process
+  产物 app/build/outputs/apk/debug/app-debug.apk
+
+  依赖仓库：settings.gradle.kts 里把阿里云镜像放最前（本机 maven.google.com 不可达）。
+  内存纪律：宿主 7.8G 且容器无 cgroup 上限；构建与模拟器串行，堆上限 1024m，不用 daemon。
+
+模拟器
+  用 AVD test35（x86_64 / android-34 / google_apis，pixel_6，配置完整）：
+      AVD=test35 bash /vol1/1000/aicache/docker/emu.sh start
+      AVD=test35 bash /vol1/1000/aicache/docker/emu.sh stop
+  坑：AVD test34 的 ~/.android/avd/test34.avd/config.ini 丢失，模拟器会退化成 arm 并
+      FATAL（CPU Architecture 'arm' is not supported），容器 7 秒即退出。别浪费时间查应用。
+  AVD 里已装的 APK 不跨容器重建存活，重启模拟器后要重新 adb install。
+
+装包与验证
+  adb install -r apk/mark-readnotes-debug-20260922.apk
+  adb shell am start -n dev.markreadnotes/.MainActivity
+  PID=$(adb shell pidof dev.markreadnotes | tr -d '\r')
+  adb forward tcp:9222 localabstract:webview_devtools_remote_$PID
+  node tools/webview-cdp.mjs eval 'window.mrState()'      # 读页面自报的真实状态
+  （重启应用后 PID 变化，forward 必须重加）
+
+  SAF 选择器没法用脚本直接指定目录：用 uiautomator dump 取按钮坐标后 input tap。
+  实测内部存储根是**不能选**的（系统显示 "Can't use this folder"），所以选一个子目录
+  （例如 Documents），应用会在其中自建 mark-readnotes。
+
+读设备数据
+  adb shell "run-as dev.markreadnotes cat databases/notes.db" > /tmp/n.db   # debug 构件可以
+  然后本机 python3 sqlite3 查 source / note_file / block 三张表。
+  落盘的 md：adb shell "cat /sdcard/Documents/mark-readnotes/<tag>.md"
+  应用日志：adb shell logcat -d -s markreadnotes

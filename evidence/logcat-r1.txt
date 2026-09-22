@@ -1,0 +1,20 @@
+--------- beginning of main
+09-22 07:30:35.081  5198  5198 I markreadnotes: app.start build=0.1.0+r1 scan=skipped(reason=startup)
+09-22 07:30:35.120  5198  5198 I markreadnotes: idx.state={"has":true,"treeUri":"content:\/\/com.android.externalstorage.documents\/tree\/primary%3ADocuments","pickedName":"Documents","rootLabel":"Documents\/mark-readnotes","files":2,"blocks":2,"lastScanAt":1790062061554}
+09-22 07:30:36.340  5198  5291 I markreadnotes: op=app.info
+09-22 07:30:36.344  5198  5292 I markreadnotes: op=src.get
+09-22 07:30:36.435  5198  5293 I markreadnotes: op=idx.blocks
+09-22 07:30:38.878  5198  5299 I markreadnotes: scan=single(file=paper.md,state=unchanged)
+09-22 07:30:38.884  5198  5299 I markreadnotes: op=blk.get
+09-22 07:30:41.157  5198  5301 I markreadnotes: scan=single(file=paper.md,state=unchanged)
+09-22 07:30:41.206  5198  5301 I markreadnotes: op=blk.save
+09-22 07:30:41.210  5198  5302 I markreadnotes: op=src.get
+09-22 07:30:41.220  5198  5303 I markreadnotes: op=idx.blocks
+09-22 07:30:43.523  5198  5306 I markreadnotes: scan=single(file=paper.md,state=unchanged)
+09-22 07:30:43.528  5198  5306 I markreadnotes: op=blk.get
+09-22 07:30:45.659  5198  5198 I markreadnotes: back.enter
+09-22 07:30:45.669  5198  5313 I markreadnotes: scan=single(file=paper.md,state=unchanged)
+09-22 07:30:45.690  5198  5198 I markreadnotes: back.js="1" handled=true finished=false
+09-22 07:30:45.700  5198  5313 I markreadnotes: op=blk.save
+09-22 07:30:45.711  5198  5314 I markreadnotes: op=src.get
+09-22 07:30:45.722  5198  5315 I markreadnotes: op=idx.blocks

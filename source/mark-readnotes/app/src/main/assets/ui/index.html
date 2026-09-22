@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>随笔</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body data-build="0.1.0+r1">
+
+<!-- 主页：最近编辑的块 -->
+<div id="home">
+  <header class="bar">
+    <div class="title">随笔</div>
+    <button id="btn-settings" class="icon" aria-label="设置">设置</button>
+  </header>
+  <main id="list"></main>
+  <div id="empty" class="empty">
+    <p id="empty-text">先选一个笔记目录，再点「＋ 新随笔」</p>
+    <button id="btn-pick-empty" class="primary">选择笔记目录</button>
+  </div>
+  <footer class="bar bottom">
+    <button id="btn-new" class="primary wide">＋ 新随笔</button>
+  </footer>
+</div>
+
+<!-- 白板：从下面弹出的全屏编辑层 -->
+<div id="board" class="sheet">
+  <header class="bar">
+    <button id="btn-done" class="primary">完成</button>
+    <button id="btn-preview" class="icon">预览</button>
+    <button id="btn-more" class="icon">⋯</button>
+  </header>
+  <div class="board-scroll">
+    <div class="arch">
+      <input id="ed-heading" class="arch-title" type="text" placeholder="一级标题（归档）" enterkeyhint="next">
+      <input id="ed-tags" class="arch-tags" type="text" placeholder="#标签（第一个决定归属文件）" enterkeyhint="done">
+      <div id="tag-hint" class="arch-hint"></div>
+    </div>
+    <textarea id="ed-body" placeholder="正文…（支持 markdown：图片、链接、基本 HTML）" spellcheck="false"></textarea>
+    <div id="preview" class="preview hidden"></div>
+  </div>
+</div>
+
+<!-- 小窗：设置 / 本块更多 -->
+<div id="sheet" class="sheet">
+  <header class="bar">
+    <div id="sheet-title" class="title">设置</div>
+    <button id="sheet-close" class="icon">关闭</button>
+  </header>
+  <div id="sheet-body" class="board-scroll"></div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="app.js"></script>
+</body>
+</html>
