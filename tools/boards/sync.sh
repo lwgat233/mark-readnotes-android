@@ -108,10 +108,19 @@ $ADB push /tmp/sync_conf_local3.md "$NODE_DIR/$CONF.md" >/dev/null
 SK=$(page '(async()=>{await call("idx.refresh");const p1=await call("sync.plan");await call("sync.resolve",{relPath:"随笔/'"$CONF"'.md",choice:"skip"});const p2=await call("sync.plan");return {前:p1.conflicts,后:p2.conflicts};})()')
 assert_eq "sync.resolve 跳过之后下次还会报（S6）" "$(echo "$SK" | jget "[d['前'],d['后']]")" "[1, 1]"
 
-# --- S7 收尾：清掉本次验收造的三个文件（本地 + 远端） ---
+# --- S7 收尾：清掉本次验收造的三个文件（本地 + 远端），并确保不留下“幽灵冲突” ---
 page '(async()=>{for(const n of ["'"$TAG"'.md","'"$REMOTE"'.md","'"$CONF"'.md"]){const b=(await call("idx.blocks",{limit:200})).filter(x=>x.file===n);for(const x of b){await call("blk.delete",{id:x.id});}}await call("idx.refresh");return true;})()' >/dev/null
 rm -f "$DAV_ROOT/随笔/$TAG.md" "$DAV_ROOT/随笔/$REMOTE.md" "$DAV_ROOT/随笔/$CONF.md"
-page '(async()=>{await call("sync.run");await reload();return true;})()' >/dev/null
+# 别的板块的验收文件也可能被同步上来过：远端同名残留一起清，否则下次同步会报“本地已删除，远端还在”。
+# 注意：目录名要显式写死（板块之间不共享变量），且不要用可能为空的变量配通配符 —— 那会删掉整个目录。
+for d in "$DAV_ROOT/随笔" "$DAV_ROOT/随笔/boardfolder"; do
+  [ -d "$d" ] || continue
+  for pat in movetest mergetest syncup remoteonly conflict-; do rm -f "$d/$pat"*.md; done
+  rm -f "$d"/legacyboard-*.md
+done
+P7=$(page '(async()=>{await call("idx.refresh");const p=await call("sync.plan");return {conflicts:p.conflicts,up:p.upload,down:p.download};})()')
+assert_eq "sync 收尾 没有幽灵冲突（S7）" "$(echo "$P7" | jget "d['conflicts']")" "0"
 info "收尾后服务器随笔目录：$(ls "$DAV_ROOT/随笔/" | tr '\n' ' ')"
+info "收尾后服务器文件夹里：$(ls "$DAV_ROOT/随笔/boardfolder/" 2>/dev/null | tr '\n' ' ')"
 
 finish_board $BOARD

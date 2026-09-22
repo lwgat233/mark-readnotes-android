@@ -169,8 +169,12 @@ assert_eq "store.migrate 验收文件已清掉" "${LEFTOVER:-空}" "空"
 LEG2=$(page '(ST.src||{}).legacy')
 assert_eq "store.migrate 待整理清零" "$LEG2" "0"
 
-# 收尾：把验收用的标签映射撤掉（不然别的板块的验收块会被落到 boardfolder 里，造成跨板块串味）
-page '(async()=>{for(const t of ["'"$TAGF"'","'"$MOVETAG"'","'"$MERG"'"]){await call("src.setTagFolder",{tag:t,folder:""});}await reload();return true;})()' >/dev/null
+# 收尾：把验收用的标签映射撤掉，并删掉本轮造的两个文件（不然每轮都往随笔目录里堆，还会被同步上去）
+page '(async()=>{for(const t of ["'"$TAGF"'","'"$MOVETAG"'","'"$MERG"'"]){await call("src.setTagFolder",{tag:t,folder:""});}
+for(const n of ["'"$MOVETAG"'.md","'"$MERG"'.md"]){const b=(await call("idx.blocks",{limit:300})).filter(x=>x.file===n);for(const x of b){await call("blk.delete",{id:x.id});}}
+await call("idx.refresh");await reload();return true;})()' >/dev/null
+LEFT=$($ADB shell "ls $NODE_DIR/$MOVETAG.md $NODE_DIR/$MERG.md $NODE_DIR/$FOLDER/$MOVETAG.md $NODE_DIR/$FOLDER/$MERG.md" 2>/dev/null | grep -c "\.md" | tr -d '\r')
+assert_eq "store 收尾 验收文件都清掉了" "${LEFT:-0}" "0"
 TF2=$(page '(ST.src.tagFolders||[]).filter(x=>["'"$TAGF"'","'"$MOVETAG"'","'"$MERG"'"].indexOf(x.tag)>=0).map(x=>x.tag+"→"+(x.folder||"随笔")).join(",")||"(空)"')
 info "收尾后这些标签的文件夹：$TF2"
 
