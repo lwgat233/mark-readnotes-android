@@ -113,6 +113,16 @@ button.wide { width: 100%; }
 .preview .katex-error { color: #ff6b6b; word-break: break-all; }
 .preview .tex { color: #c8d3f5; font-family: ui-monospace, monospace; }
 
+/* 搜索行（主页顶部）：一个输入框 + 清空键 */
+.searchbar { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-bottom: 1px solid var(--line); }
+#q { flex: 1; min-width: 0; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+  color: var(--fg); font-size: 14px; padding: 7px 10px; outline: none; }
+#q::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+#q:focus { border-color: var(--accent); }
+.searchbar .icon { flex: none; }
+/* 命中高亮（主页卡片里） */
+.b-head mark, .b-body mark { background: rgba(255,214,10,0.35); color: inherit; border-radius: 3px; padding: 0 1px; }
+
 /* 小窗里的信息行 */
 .row { padding: 12px 14px; border-bottom: 1px solid var(--line); }
 .row .k { font-size: 12px; color: var(--dim); }

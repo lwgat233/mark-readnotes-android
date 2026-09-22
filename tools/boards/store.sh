@@ -178,4 +178,40 @@ assert_eq "store 收尾 验收文件都清掉了" "${LEFT:-0}" "0"
 TF2=$(page '(ST.src.tagFolders||[]).filter(x=>["'"$TAGF"'","'"$MOVETAG"'","'"$MERG"'"].indexOf(x.tag)>=0).map(x=>x.tag+"→"+(x.folder||"随笔")).join(",")||"(空)"')
 info "收尾后这些标签的文件夹：$TF2"
 
+# --- tables：v4 的表一次建齐（图片/历史/待办/双链/偏好/加密）+ 剪藏来源两列 ---
+T=$(page '(async()=>{const r=await call("idx.tables");const need=["source","note_file","block","meta","tag_folder","sync_state","asset","hist","task","link","pref","vault_note","vault_meta"];const have=r.tables.map(t=>t.name);const cols=r.blockCols||[];return {n:r.count,missing:need.filter(x=>have.indexOf(x)<0).length,c1:cols.indexOf("src_url")>=0?1:0,c2:cols.indexOf("src_title")>=0?1:0};})()')
+assert_eq "store.tables 缺表数为 0（v4 建齐）" "$(echo "$T" | jget "d['missing']")" "0"
+assert_eq "store.tables block 有 src_url 列" "$(echo "$T" | jget "d['c1']")" "1"
+assert_eq "store.tables block 有 src_title 列" "$(echo "$T" | jget "d['c2']")" "1"
+info "库里的表：$(page '(async()=>{const r=await call("idx.tables");return r.tables.map(t=>t.name+":"+t.rows).join(" ");})()')"
+
+# --- tag：标签管理（清单 / 改名 / 删；改标签时块跟着搬文件） ---
+TS=$(date +%H%M%S)
+TA="tga$TS"; TB="tgb$TS"; TC="tgc$TS"
+CB_TAG=$(page 'window.mrState().cards')
+B1=$(page '(async()=>{const r=await call("blk.new",{tag:"'"$TA"'",heading:"标签验收A",body:"甲"});return r.id;})()' | unq)
+B2=$(page '(async()=>{const r=await call("blk.new",{tag:"'"$TA"'",heading:"标签验收B",body:"乙"});return r.id;})()' | unq)
+page '(async()=>{await call("blk.save",{id:'"$B2"',heading:"标签验收B",tags:["'"$TA"'","'"$TB"'"],body:"乙"});await reload();return 1;})()' >/dev/null
+L1=$(page '(async()=>{const r=await call("tag.list");const g=function(t){const x=r.tags.filter(function(y){return y.tag===t;})[0];return x?x.blocks:0;};return {a:g("'"$TA"'"),b:g("'"$TB"'")};})()')
+assert_eq "store.tag 清单：$TA 有 2 个块" "$(echo "$L1" | jget "d['a']")" "2"
+assert_eq "store.tag 清单：$TB 有 1 个块" "$(echo "$L1" | jget "d['b']")" "1"
+R=$(page '(async()=>{const r=await call("tag.rename",{from:"'"$TA"'",to:"'"$TC"'"});const l=await call("tag.list");const f=(await call("idx.blocks",{limit:300})).filter(function(b){return b.tags.indexOf("'"$TC"'")>=0;}).map(function(b){return b.file;}).join(",");return {blocks:r.blocks,left:l.tags.filter(function(x){return x.tag==="'"$TA"'";}).length,c:l.tags.filter(function(x){return x.tag==="'"$TC"'";})[0].blocks,files:f};})()')
+assert_eq "store.tag 改名动了 2 个块" "$(echo "$R" | jget "d['blocks']")" "2"
+assert_eq "store.tag 旧标签从清单里没了" "$(echo "$R" | jget "d['left']")" "0"
+assert_eq "store.tag 新标签拿到 2 个块" "$(echo "$R" | jget "d['c']")" "2"
+FILES=$(echo "$R" | jget "d['files']")
+case "$FILES" in *"$TC"*) ok "store.tag 两个块都落到新标签的文件里" "$FILES";; *) bad "store.tag 块没落到新标签的文件" "$FILES";; esac
+D=$(page '(async()=>{const r=await call("tag.delete",{tag:"'"$TC"'"});const l=await call("tag.list");return {blocks:r.blocks,uns:r.toUnsorted,left:l.tags.filter(function(x){return x.tag==="'"$TC"'";}).length};})()')
+assert_eq "store.tag 删标签动了 2 个块" "$(echo "$D" | jget "d['blocks']")" "2"
+assert_eq "store.tag 只剩这一个标签的块落到 unsorted" "$(echo "$D" | jget "d['uns']")" "1"
+assert_eq "store.tag 删完标签没了" "$(echo "$D" | jget "d['left']")" "0"
+# 界面入口：设置里有这一行（原标签 / 新标签 两个框）
+tap '#btn-settings' >/dev/null; sleep 1
+U=$(page '(()=>{const a=document.getElementById("set-tag-from"),b=document.getElementById("set-tag-to");return {both:!!(a&&b)};})()')
+assert_true "store.tag 设置里有标签管理行" "$(echo "$U" | jget "d['both']")"
+page 'closeSheet()' >/dev/null; sleep 1   # 用页面自己的关闭函数（点 ✕ 时会因为它在屏幕外而点不到）
+# 收尾：验收块删掉，不留残件（P23）
+page '(async()=>{for(const id of ['"$B1"','"$B2"'])await call("blk.delete",{id:id});await reload();return 1;})()' >/dev/null; sleep 1
+assert_eq "store.tag 收尾把验收块清掉了" "$(page 'window.mrState().cards')" "$CB_TAG"
+
 finish_board $BOARD

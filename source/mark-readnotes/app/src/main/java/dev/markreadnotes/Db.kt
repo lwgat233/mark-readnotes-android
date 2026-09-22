@@ -22,7 +22,37 @@ data class SyncRow(
 )
 
 /** SQLite：索引与“最近编辑”顺序的权威源（正文的权威源始终是磁盘上的 md） */
-class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 3) {
+class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 4) {
+
+    /** v4 的表：后面几轮的功能先在这里把位子留好（一轮建一次库太贵，见 docs/数据模型.md） */
+    private val v4tables = listOf(
+        // 图片/附件：外链图下载进随笔目录后的登记（按内容哈希去重）—— 第 11 轮用
+        """CREATE TABLE IF NOT EXISTS asset(id INTEGER PRIMARY KEY, hash TEXT UNIQUE, rel_path TEXT, mime TEXT,
+           size INTEGER, src_url TEXT, block_id INTEGER, created_at INTEGER)""",
+        // 笔记历史：每次保存前留一份原文（可回退、可按天数清理）—— 第 12 轮用
+        """CREATE TABLE IF NOT EXISTS hist(id INTEGER PRIMARY KEY, block_id INTEGER, file_rel TEXT, raw TEXT,
+           size INTEGER, hash TEXT, reason TEXT, created_at INTEGER)""",
+        "CREATE INDEX IF NOT EXISTS idx_hist_block ON hist(block_id, created_at DESC)",
+        // 待办与提醒 —— 第 13 轮用
+        """CREATE TABLE IF NOT EXISTS task(id INTEGER PRIMARY KEY, block_id INTEGER, text TEXT, done INTEGER DEFAULT 0,
+           due_at INTEGER, remind_at INTEGER, notified INTEGER DEFAULT 0, created_at INTEGER, updated_at INTEGER)""",
+        // 双链 [[目标]] —— 第 15 轮用
+        """CREATE TABLE IF NOT EXISTS link(id INTEGER PRIMARY KEY, src_block_id INTEGER, target TEXT, kind TEXT,
+           created_at INTEGER, UNIQUE(src_block_id, target))""",
+        // 用户偏好（meta 放设备态：导出目录等；pref 放偏好：字号/排序）—— 第 10 轮起用
+        "CREATE TABLE IF NOT EXISTS pref(key TEXT PRIMARY KEY, value TEXT, updated_at INTEGER)",
+        // 加密笔记：正文以密文落库，口令只在本机校验（不存口令）—— 第 16 轮用
+        """CREATE TABLE IF NOT EXISTS vault_note(id INTEGER PRIMARY KEY, name TEXT UNIQUE, cipher BLOB, iv TEXT,
+           size INTEGER, created_at INTEGER, updated_at INTEGER)""",
+        "CREATE TABLE IF NOT EXISTS vault_meta(key TEXT PRIMARY KEY, value TEXT)"
+    )
+
+    private fun applyV4(db: SQLiteDatabase) {
+        v4tables.forEach { db.execSQL(it) }
+        // 剪藏来源：这块是从哪个网页/分享来的 —— 第 14 轮用
+        runCatching { db.execSQL("ALTER TABLE block ADD COLUMN src_url TEXT") }
+        runCatching { db.execSQL("ALTER TABLE block ADD COLUMN src_title TEXT") }
+    }
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -48,6 +78,7 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 3) {
             """CREATE TABLE sync_state(rel_path TEXT PRIMARY KEY, local_size INTEGER, local_hash TEXT,
                remote_size INTEGER, remote_mtime INTEGER, remote_etag TEXT, synced_at INTEGER)"""
         )
+        applyV4(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) {
@@ -63,6 +94,29 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 3) {
                 """CREATE TABLE IF NOT EXISTS sync_state(rel_path TEXT PRIMARY KEY, local_size INTEGER, local_hash TEXT,
                    remote_size INTEGER, remote_mtime INTEGER, remote_etag TEXT, synced_at INTEGER)"""
             )
+        }
+        // v3 → v4：把后面几轮要用的表一次建齐（图片/历史/待办/双链/偏好/加密 + 剪藏来源两列）
+        if (old < 4) applyV4(db)
+    }
+
+    /** block 表的列名（验收用：证明 v4 迁移里加的两列真的加上了） */
+    fun blockCols(): List<String> = readableDatabase.rawQuery("PRAGMA table_info(block)", null).use { c ->
+        val out = ArrayList<String>()
+        while (c.moveToNext()) out.add(c.getString(1))
+        out
+    }
+
+    /** 库里的表 + 行数（验收用：`idx.tables`）；表名写死在这里，缺表一眼能看出来 */
+    fun tableStats(): List<Pair<String, Int>> {
+        val names = listOf(
+            "source", "note_file", "block", "meta", "tag_folder", "sync_state",
+            "asset", "hist", "task", "link", "pref", "vault_note", "vault_meta"
+        )
+        return names.map { n ->
+            val rows = readableDatabase.rawQuery("SELECT COUNT(*) FROM $n", null).use { c ->
+                if (c.moveToFirst()) c.getInt(0) else -1
+            }
+            n to rows
         }
     }
 
@@ -217,6 +271,20 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 3) {
             while (c.moveToNext()) out.add(blockRow(c))
             out
         }
+
+    /** 搜索：按关键词在索引里找块（标题/标签/正文），按最近编辑排在前面。判据见 boards/notes.sh#search */
+    fun searchBlocks(q: String, limit: Int): List<BlockRow> {
+        val esc = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        val like = "%" + esc + "%"
+        return readableDatabase.rawQuery(
+            "SELECT * FROM block WHERE present=1 AND (heading LIKE ? ESCAPE '\\' OR tags LIKE ? ESCAPE '\\' OR body LIKE ? ESCAPE '\\') ORDER BY updated_at DESC LIMIT ?",
+            arrayOf(like, like, like, limit.toString())
+        ).use { c ->
+            val out = ArrayList<BlockRow>()
+            while (c.moveToNext()) out.add(blockRow(c))
+            out
+        }
+    }
 
     fun allBlocks(): List<BlockRow> = readableDatabase.rawQuery("SELECT * FROM block WHERE present=1 ORDER BY file_id, block_index", null).use { c ->
         val out = ArrayList<BlockRow>()

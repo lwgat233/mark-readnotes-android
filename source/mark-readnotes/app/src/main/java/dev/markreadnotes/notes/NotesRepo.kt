@@ -384,6 +384,101 @@ class NotesRepo(private val store: Store) {
 
     // ---------------------- 文件夹（标签 → 文件夹的映射） ----------------------
 
+    // ---------------------- 标签管理（第 10 轮：改名 / 合并 / 删） ----------------------
+    // 规矩：标签的改动一律走 saveBlock 那条路（它会负责把块搬进对应标签的文件），
+    // 不直接改索引 —— 否则文件与索引就会对不上（P18 那类事故）。
+
+    /** 标签清单：每个标签有多少块（按块数排）—— 判据 boards/store.sh#tag */
+    fun tagStats(): JSONObject {
+        val counts = LinkedHashMap<String, Int>()
+        db.allBlocks().forEach { r -> tagList(r).forEach { t -> counts[t] = (counts[t] ?: 0) + 1 } }
+        val arr = JSONArray()
+        counts.entries.sortedByDescending { it.value }.forEach { (t, c) ->
+            arr.put(JSONObject().put("tag", t).put("blocks", c))
+        }
+        return JSONObject().put("count", arr.length()).put("tags", arr)
+    }
+
+    /** 改名（合并也走这里）：含该标签的块全部改；原来指过文件夹的话，映射跟着走 */
+    @Synchronized
+    fun renameTag(from: String, to: String): JSONObject {
+        val oldTag = from.trim().removePrefix("#").trim()
+        val newTag = to.trim().removePrefix("#").trim()
+        if (oldTag.isBlank()) throw IllegalArgumentException("原标签不能为空")
+        if (newTag.isBlank()) throw IllegalArgumentException("新标签不能为空")
+        if (oldTag == newTag) return JSONObject().put("from", oldTag).put("to", newTag).put("blocks", 0)
+        // 映射跟着走（从 sourceJson 里读那份映射，避免再加一个库接口）：先改映射，块才落对地方
+        var movedMapping = false
+        sourceJson().optJSONArray("tagFolders")?.let { tf ->
+            for (i in 0 until tf.length()) {
+                val o = tf.optJSONObject(i) ?: continue
+                if (o.optString("tag") == oldTag) {
+                    val folder = o.optString("folder")
+                    if (folder.isNotBlank()) { setTagFolder(newTag, folder); movedMapping = true }
+                }
+            }
+        }
+        val hit = db.allBlocks().filter { tagList(it).contains(oldTag) }
+        hit.forEach { r ->
+            saveBlock(r.id, r.heading, tagList(r).map { if (it == oldTag) newTag else it }, r.body)
+        }
+        return JSONObject().put("from", oldTag).put("to", newTag)
+            .put("blocks", hit.size).put("mappingFollowed", movedMapping)
+    }
+
+    /** 删标签：从所有块的标签行里去掉；去掉后一个标签都不剩的块落到 unsorted */
+    @Synchronized
+    fun deleteTag(tag: String): JSONObject {
+        val t = tag.trim().removePrefix("#").trim()
+        if (t.isBlank()) throw IllegalArgumentException("标签不能为空")
+        val hit = db.allBlocks().filter { tagList(it).contains(t) }
+        var toUnsorted = 0
+        hit.forEach { r ->
+            val rest = tagList(r).filter { it != t }
+            if (rest.isEmpty()) toUnsorted++
+            saveBlock(r.id, r.heading, rest.ifEmpty { listOf(Md.DEFAULT_TAG) }, r.body)
+        }
+        return JSONObject().put("tag", t).put("blocks", hit.size).put("toUnsorted", toUnsorted)
+    }
+
+    /** 库里的表与行数（idx.tables）：验收用，也方便排障时看库长什么样 */
+    fun tables(): JSONObject {
+        val arr = JSONArray()
+        db.tableStats().forEach { (n, rows) -> arr.put(JSONObject().put("name", n).put("rows", rows)) }
+        return JSONObject().put("count", arr.length()).put("tables", arr).put("blockCols", JSONArray(db.blockCols()))
+    }
+
+    /** 搜索（idx.search）：命中处带上下文片段，界面负责高亮。判据 boards/notes.sh#search */
+    @Synchronized
+    fun search(q: String, limit: Int): JSONObject {
+        val query = q.trim()
+        val items = JSONArray()
+        if (query.isEmpty()) return JSONObject().put("q", query).put("count", 0).put("items", items)
+        val lim = if (limit <= 0) 60 else limit
+        db.searchBlocks(query, lim).forEach { r ->
+            items.put(
+                JSONObject()
+                    .put("id", r.id)
+                    .put("heading", r.heading)
+                    .put("tag", r.tag)
+                    .put("tags", JSONArray(tagList(r)))
+                    .put("snippet", snippetOf(r.body, query))
+                    .put("updatedAt", r.updatedAt)
+            )
+        }
+        return JSONObject().put("q", query).put("count", items.length()).put("items", items)
+    }
+
+    /** 命中处前后各取一段；一个字都没命中就从开头截（片段只用于显示） */
+    private fun snippetOf(body: String, q: String, span: Int = 40): String {
+        val s = body.replace("\n", " ").trim()
+        val i = s.indexOf(q, ignoreCase = true)
+        if (i < 0) return if (s.length <= span * 2) s else s.substring(0, span * 2) + "…"
+        val a = maxOf(0, i - span)
+        val b = minOf(s.length, i + q.length + span)
+        return (if (a > 0) "…" else "") + s.substring(a, b) + (if (b < s.length) "…" else "")
+    }
+
     /** 建文件夹（一层层往下）；只允许建在随笔目录里 */
     @Synchronized
     fun mkdir(relDir: String): JSONObject {

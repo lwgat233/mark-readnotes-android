@@ -1,8 +1,8 @@
 ==== 板块验收：随笔 ====
 OK   notes.home 卡片数=索引块数 | 14
-     页面版本标记 build=0.1.0+r16
+     页面版本标记 build=0.1.0+r20
 OK   notes.board 白板宽=可视宽 | 412
-OK   notes.board 白板高=可视高 | 842
+OK   notes.board 白板高=可视高 | 530
 OK   notes.board 白板贴顶(y=0) | 0
 OK   notes.arch 标题在归档区里 | True
 OK   notes.arch 正文不在归档区里 | True
@@ -14,4 +14,13 @@ OK   notes.delete 第一次点击进入确认态 | 再点一次确认删除
      删除后提示："已删除"
 OK   notes.delete 块已从 md 里删掉 | 随笔/boardtest2.md 不再含该块
 OK   notes.delete 块数回到基线 | 14
----- 随笔: OK=11 FAIL=0
+OK   notes.search 命中 1 个块 | 1
+OK   notes.search 命中的就是这个块 | 79
+     命中片段：正文里也有 searchword193712 这个词
+OK   notes.search 界面只列命中项 | 1
+OK   notes.search 命中处有高亮 | True
+OK   notes.search 搜不到时 0 张卡片 | 0
+OK   notes.search 搜不到时有空态 | 没有匹配的随笔
+OK   notes.search 清空后回到最近编辑（基线+搜索块） | 15
+OK   notes.search 收尾把验收块清掉了 | 14
+---- 随笔: OK=19 FAIL=0

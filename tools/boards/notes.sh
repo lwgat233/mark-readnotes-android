@@ -70,4 +70,36 @@ CARDS2=$(page 'window.mrState().cards')
 # 本轮先建了一个块（基线 +1），删除后应回到开场的基线
 assert_eq "notes.delete 块数回到基线" "${CARDS2:-0}" "$CARDS"
 
+# --- search：搜索（正文/标题命中 → 界面只列命中项 + 高亮 → 搜不到有空态 → 清空回基线 → 收尾自清） ---
+WORD="searchword$STAMP"
+tap '#btn-new' >/dev/null; sleep 1
+page 'document.getElementById("ed-heading").value=""' >/dev/null
+( cd "$ROOT" && $PROBE type '#ed-heading' "搜索验收 $WORD" ) >/dev/null
+( cd "$ROOT" && $PROBE type '#ed-tags' "$TAG1" ) >/dev/null
+( cd "$ROOT" && $PROBE type '#ed-body' "正文里也有 $WORD 这个词" ) >/dev/null
+tap '#btn-done' >/dev/null; sleep 2
+SID=$(page '(async()=>{const r=await call("idx.blocks",{limit:1});return r[0].id;})()' | unq)
+HIT=$(page '(async()=>{const r=await call("idx.search",{q:"'"$WORD"'"});return {n:r.count,id:r.items[0]?r.items[0].id:-1,snip:r.items[0]?r.items[0].snippet:""};})()')
+assert_eq "notes.search 命中 1 个块" "$(echo "$HIT" | jget "d['n']")" "1"
+assert_eq "notes.search 命中的就是这个块" "$(echo "$HIT" | jget "d['id']")" "$SID"
+info "命中片段：$(echo "$HIT" | jget "d['snip']")"
+( cd "$ROOT" && $PROBE type '#q' "$WORD" ) >/dev/null; sleep 1
+UI=$(page '(()=>({cards:document.querySelectorAll("#list .card").length,mark:document.querySelectorAll("#list mark").length}))()')
+assert_eq "notes.search 界面只列命中项" "$(echo "$UI" | jget "d['cards']")" "1"
+assert_true "notes.search 命中处有高亮" "$(echo "$UI" | jget "d['mark']>=1")"
+page 'document.getElementById("q").value=""' >/dev/null
+( cd "$ROOT" && $PROBE type '#q' "zzz$STAMP" ) >/dev/null; sleep 1
+NONE=$(page '(()=>({cards:document.querySelectorAll("#list .card").length,empty:document.getElementById("empty-text").textContent}))()')
+assert_eq "notes.search 搜不到时 0 张卡片" "$(echo "$NONE" | jget "d['cards']")" "0"
+assert_eq "notes.search 搜不到时有空态" "$(echo "$NONE" | jget "d['empty']")" "没有匹配的随笔"
+page 'document.getElementById("q").value=""' >/dev/null
+tap '#q-clear' >/dev/null; sleep 1
+CARDS3=$(page 'window.mrState().cards')
+# 此时搜索验收用的块还在（下面一步才删），所以清空后应该是 基线 + 1
+assert_eq "notes.search 清空后回到最近编辑（基线+搜索块）" "${CARDS3:-0}" "$((CARDS + 1))"
+# 收尾：搜索验收用的块删掉，不在随笔目录里留残件（见 P23）
+page '(async()=>{await call("blk.delete",{id:'"$SID"'});await reload();return 1;})()' >/dev/null; sleep 1
+CARDS4=$(page 'window.mrState().cards')
+assert_eq "notes.search 收尾把验收块清掉了" "${CARDS4:-0}" "$CARDS"
+
 finish_board $BOARD

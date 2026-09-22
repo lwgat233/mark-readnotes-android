@@ -24,6 +24,17 @@ function openSettings() {
         { btn: { label: '指过去', act: 'tagfolder', fn: doSetTagFolder } }
       ]
     });
+    rows.push({
+      k: '标签管理',
+      items: [
+        { id: 'set-tag-from', ph: '原标签' },
+        { id: 'set-tag-to', ph: '改成 / 合并到' },
+        { btn: { label: '改名', act: 'tagrename', fn: doTagRename } },
+        { btn: { label: '删', act: 'tagdelete', fn: doTagDelete } }
+      ]
+    });
+    const tl = ST.tags || [];
+    if (tl.length) rows.push(rowKV('标签（块数）', tl.map(function (x) { return '#' + x.tag + '(' + x.blocks + ')'; }).join('　')));
     if (s.legacy) {
       rows.push({
         k: '待整理',
@@ -90,6 +101,25 @@ async function doSetTagFolder() {
     await reload();
     openSettings();
   } catch (e) { toast('指不过去：' + e.message, 3400); }
+}
+async function doTagRename() {
+  const from = (el('set-tag-from') && el('set-tag-from').value || '').trim();
+  const to = (el('set-tag-to') && el('set-tag-to').value || '').trim();
+  if (!from || !to) { toast('原标签和新标签都要填', 2600); return; }
+  try {
+    const r = await call('tag.rename', { from: from, to: to });
+    toast('已把 #' + r.from + ' 改成 #' + r.to + '（' + r.blocks + ' 个块）', 3600);
+    await reload(); openSettings();
+  } catch (e) { toast('改名失败：' + e.message, 3400); }
+}
+async function doTagDelete() {
+  const tag = (el('set-tag-from') && el('set-tag-from').value || '').trim();
+  if (!tag) { toast('先填标签', 2200); return; }
+  try {
+    const r = await call('tag.delete', { tag: tag });
+    toast('已删 #' + r.tag + '（动了 ' + r.blocks + ' 个块，' + r.toUnsorted + ' 个落到 unsorted）', 3600);
+    await reload(); openSettings();
+  } catch (e) { toast('删标签失败：' + e.message, 3400); }
 }
 async function doMigrate() {
   toast('正在整理…', 2000);

@@ -51,6 +51,18 @@ function onPush(type, data) {
     });
   });
   el('ed-tags').addEventListener('focus', function () { this.select(); });  // 短字段：点进去即全选，打字就是替换
+  // 搜索（有一个字就打一次 op；清空回到最近编辑）
+  el('q').addEventListener('input', function () {
+    const v = this.value;
+    el('q-clear').classList.toggle('hidden', !v);
+    clearTimeout(ST.searchTimer);
+    ST.searchTimer = setTimeout(function () { runSearch(v); }, 200);
+  });
+  el('q-clear').addEventListener('click', function () {
+    el('q').value = '';
+    el('q-clear').classList.add('hidden');
+    runSearch('');
+  });
   setInterval(autosave, 10000);
   call('app.info').then(function (i) { ST.info = i; }).catch(function () { });
   reload();

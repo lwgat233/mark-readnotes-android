@@ -16,6 +16,7 @@ window.MRN_REGISTRY = {
   ],
   "features": [
     { "id": "notes.home",     "board": "notes", "name": "主页列出最近编辑的块", "carrier": "主页列表", "entry": "打开应用", "testId": "#list", "status": "done", "test": "boards/notes.sh#home" },
+    { "id": "notes.search",    "board": "notes", "name": "搜索块（标题/标签/正文，带命中高亮）", "carrier": "主页顶部搜索行", "entry": "主页搜索框", "testId": "#q", "status": "done", "test": "boards/notes.sh#search" },
     { "id": "notes.new",      "board": "notes", "name": "新建块", "carrier": "主页底部按键", "entry": "＋ 新随笔", "testId": "#btn-new", "status": "done", "test": "boards/notes.sh#new" },
     { "id": "notes.board",    "board": "notes", "name": "全屏白板编辑", "carrier": "全屏浮层", "entry": "点卡片", "testId": "#board", "status": "done", "test": "boards/notes.sh#board" },
     { "id": "notes.arch",     "board": "notes", "name": "归档区（标题+标签）与正文隔离", "carrier": "白板顶部", "entry": "白板", "testId": ".arch", "status": "done", "test": "boards/notes.sh#arch" },
@@ -32,6 +33,7 @@ window.MRN_REGISTRY = {
     { "id": "store.auth",     "board": "store", "name": "目录授权（SAF 持久授权）", "carrier": "设置小窗", "entry": "重新选择目录", "testId": "#btn-pick-empty", "status": "done", "test": "boards/store.sh#auth" },
     { "id": "store.scan",     "board": "store", "name": "懒扫描索引（冷启动不扫目录）", "carrier": "后台", "entry": "冷启动", "testId": "#list", "status": "done", "test": "boards/store.sh#scan" },
     { "id": "store.write",    "board": "store", "name": "写回 md（文件是权威源）", "carrier": "后台", "entry": "保存块", "testId": "#btn-done", "status": "done", "test": "boards/store.sh#write" },
+    { "id": "store.tags",      "board": "store", "name": "标签管理（改名 / 合并 / 删）", "carrier": "设置小窗", "entry": "主页 设置", "testId": "#btn-settings", "status": "done", "test": "boards/store.sh#tag" },
     { "id": "store.folder",   "board": "store", "name": "随笔目录里的文件夹（标签 → 文件夹）", "carrier": "设置小窗", "entry": "主页 设置", "testId": "#btn-settings", "status": "done", "test": "boards/store.sh#folder" },
     { "id": "store.movefile", "board": "store", "name": "一个标签一个文件（指过去＝连已有文件一起搬，同名合并）", "carrier": "设置小窗", "entry": "主页 设置", "testId": "#btn-settings", "status": "done", "test": "boards/store.sh#move" },
     { "id": "store.migrate",  "board": "store", "name": "整理旧布局（根下 md 搬进随笔目录）", "carrier": "设置小窗（有待整理时才出现）", "entry": "主页 设置", "testId": "#btn-settings", "status": "done", "test": "boards/store.sh#migrate" },

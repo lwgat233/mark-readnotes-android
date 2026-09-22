@@ -19,6 +19,15 @@ object SourceOps {
 
         "src.get", "idx.stats" -> notes.sourceJson()
 
+        "idx.search" -> notes.search(a.optString("q"), a.optInt("limit", 60))
+
+        "idx.tables" -> notes.tables()
+
+        // 标签管理（第 10 轮）：清单 / 改名 / 合并（=改名）/ 删
+        "tag.list" -> notes.tagStats()
+        "tag.rename", "tag.merge" -> notes.renameTag(a.optString("from"), a.optString("to"))
+        "tag.delete" -> notes.deleteTag(a.optString("tag"))
+
         "idx.refresh" -> {
             val (files, blocks) = notes.refresh(true)
             JSONObject().put("files", files).put("blocks", blocks)

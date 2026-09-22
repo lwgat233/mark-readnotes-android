@@ -11,8 +11,8 @@
 | 他的功能 | 出处 | 我们 | 说明 |
 |---|---|---|---|
 | 仪表盘（Dashboard：文件夹条 + 笔记网格/列表 + 排序 + 选择工具栏） | `ui/DashboardScreen.kt`、`ui/DashboardSelectionTopAppBar.kt`、`repo/prefs/DashboardPreferences.kt` | 半抄 | 我们主页只有"最近编辑的块"列表；缺 文件夹条、排序、多选批量操作 |
-| 左侧栏/抽屉（导航入口） | `ui/DashboardScreen.kt`（drawer） | **在做** | 用户 2026-09-22 明确要求：**侧栏当功能入口，导出/设置/同步都收到左边** |
-| 搜索（带命中高亮、匹配条目） | `ui/SearchBar`、`model/NoteSearchMatch.kt` | 没抄 | 笔记一多就得靠它；要做 |
+| 左侧栏/抽屉（导航入口） | `ui/DashboardScreen.kt`（drawer） | **不做** | 用户 2026-09-22 拍板「不做」：主页布局不动（曾提出把导出/设置/同步收进侧栏，随后否掉） |
+| 搜索（带命中高亮、匹配条目） | `ui/SearchBar`、`model/NoteSearchMatch.kt` | **已抄** | 第 9 轮做完：`idx.search{q,limit}`，界面在主页顶部，命中处 `<mark>` 高亮（判据 `notes.sh#search`） |
 | 标签管理（重命名/合并/删除） | `ui/TagManagementScreen.kt`、`database/LabelDao.kt`、`LabelEntity.kt` | 没抄 | 我们的标签现在只能靠改块里的标签行 |
 | 文件夹管理（新建/重命名/移动，带事务） | `ui/FolderManagementScreen.kt`、`data/database` 迁移与事务测试 | 半抄 | 我们能在设置里建文件夹 + 标签→文件夹；缺 重命名/删除 |
 | 笔记信息与备注 | `ui/NoteInfoDialog.kt`、`NoteRemarkDao/Entity` | 没抄 | 备注/高亮类 |

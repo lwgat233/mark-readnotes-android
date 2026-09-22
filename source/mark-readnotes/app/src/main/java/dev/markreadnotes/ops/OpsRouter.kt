@@ -48,7 +48,8 @@ class OpsRouter(
 
     private fun route(op: String, args: JSONObject): Any = when (op.substringBefore('.')) {
         "app" -> AppOps.handle(op, args, buildTag)
-        "src", "idx" -> SourceOps.handle(op, args, notes, pickTree, pickExport)
+        // 注意：**新增 op 前缀必须在这里登记**，否则前端报“未知 op：xxx”（第 10 轮 tag.* 就这么挂的）
+        "src", "idx", "tag" -> SourceOps.handle(op, args, notes, pickTree, pickExport)
         "blk" -> BlockOps.handle(op, args, notes)
         "exp" -> ExportOps.handle(op, args, export, ctx)
         "sync" -> SyncOps.handle(op, args, sync)

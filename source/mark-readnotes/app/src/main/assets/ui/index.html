@@ -11,7 +11,7 @@
 <script src="vendor/markdown-it-texmath/texmath.js"></script>
 <script src="vendor/markdown-it-task-lists/markdown-it-task-lists.min.js"></script>
 </head>
-<body data-build="0.1.0+r16">
+<body data-build="0.1.0+r20">
 
 <!-- 主页：最近编辑的块 -->
 <div id="home">
@@ -20,6 +20,10 @@
     <button id="btn-export" class="icon" aria-label="导出">导出</button>
     <button id="btn-settings" class="icon" aria-label="设置">设置</button>
   </header>
+  <div class="searchbar">
+    <input id="q" type="search" placeholder="搜索" enterkeyhint="search" autocomplete="off">
+    <button id="q-clear" class="icon hidden" aria-label="清空">✕</button>
+  </div>
   <main id="list"></main>
   <div id="empty" class="empty">
     <p id="empty-text">先选一个笔记目录，再点「＋ 新随笔」</p>

@@ -18,16 +18,16 @@ OK   store.folder 映射写进了索引 | boardfolder
 OK   store.folder 归属提示带上文件夹 | "归属文件：boardfolder/foldertest.md"
 OK   store.folder 该标签的块落在文件夹里 | boardfolder/foldertest.md
 OK   store.folder 内容确实写进了那个文件 | ok
-OK   store.move 搬家前文件在随笔目录 | movetest184726.md
-     指过去提示：「movetest184726」的块以后落到 boardfolder，已把 1 个块搬过去
-OK   store.move 提示里报了搬几个块 | 「movetest184726」的块以后落到 boardfolder，已把 1 个块搬过去
-OK   store.move 文件到了文件夹里 | boardfolder/movetest184726.md
+OK   store.move 搬家前文件在随笔目录 | movetest193822.md
+     指过去提示：「movetest193822」的块以后落到 boardfolder，已把 1 个块搬过去
+OK   store.move 提示里报了搬几个块 | 「movetest193822」的块以后落到 boardfolder，已把 1 个块搬过去
+OK   store.move 文件到了文件夹里 | boardfolder/movetest193822.md
 OK   store.move 旧位置的文件没了 | 已搬走
 OK   store.move 内容跟着走了 | ok
 OK   store.move 搬完块数没变 | 15
-OK   store.move 索引里的落位也改了 | 随笔/boardfolder/movetest184726.md
-     合并提示：「mergetest184726」的块以后落到 boardfolder，已把 2 个块搬过去（并进已有文件）
-OK   store.merge 提示说了并进已有文件 | 「mergetest184726」的块以后落到 boardfolder，已把 2 个块搬过去（并进已有文件）
+OK   store.move 索引里的落位也改了 | 随笔/boardfolder/movetest193822.md
+     合并提示：「mergetest193822」的块以后落到 boardfolder，已把 2 个块搬过去（并进已有文件）
+OK   store.merge 提示说了并进已有文件 | 「mergetest193822」的块以后落到 boardfolder，已把 2 个块搬过去（并进已有文件）
 OK   store.merge 合并后总数没变（3 个块各一份） | 18
 OK   store.merge 合并后的文件里有「原地的第一块」 | ok
 OK   store.merge 合并后的文件里有「原地的第二块」 | ok
@@ -37,12 +37,27 @@ OK   store.merge 同名文件行只剩一个 | 1
 OK   store.migrate 待整理数 ≥1（D3 前置） | True
 OK   store.migrate 有待整理时才出现这个键 | 1
 OK   store.migrate 根下 md 归零（D2） | 0
-OK   store.migrate 文件到了随笔目录 | legacyboard-184726.md
+OK   store.migrate 文件到了随笔目录 | legacyboard-193822.md
 OK   store.migrate 搬完字节一致（D2） | cmp 相同
 OK   store.migrate 搬完块数没变（D3） | 20
 OK   store.migrate 该文件的块都在（D3） | 2
 OK   store.migrate 验收文件已清掉 | 空
 OK   store.migrate 待整理清零 | 0
 OK   store 收尾 验收文件都清掉了 | 0
-     收尾后这些标签的文件夹："foldertest→随笔,mergetest184726→随笔,movetest184726→随笔"
----- 存储: OK=39 FAIL=0
+     收尾后这些标签的文件夹："foldertest→随笔,mergetest193822→随笔,movetest193822→随笔"
+OK   store.tables 缺表数为 0（v4 建齐） | 0
+OK   store.tables block 有 src_url 列 | 1
+OK   store.tables block 有 src_title 列 | 1
+     库里的表："source:1 note_file:39 block:69 meta:6 tag_folder:28 sync_state:40 asset:0 hist:0 task:0 link:0 pref:0 vault_note:0 vault_meta:0"
+OK   store.tag 清单：tga193937 有 2 个块 | 2
+OK   store.tag 清单：tgb193937 有 1 个块 | 1
+OK   store.tag 改名动了 2 个块 | 2
+OK   store.tag 旧标签从清单里没了 | 0
+OK   store.tag 新标签拿到 2 个块 | 2
+OK   store.tag 两个块都落到新标签的文件里 | tgc193937.md,tgc193937.md
+OK   store.tag 删标签动了 2 个块 | 2
+OK   store.tag 只剩这一个标签的块落到 unsorted | 1
+OK   store.tag 删完标签没了 | 0
+OK   store.tag 设置里有标签管理行 | True
+OK   store.tag 收尾把验收块清掉了 | 14
+---- 存储: OK=53 FAIL=0

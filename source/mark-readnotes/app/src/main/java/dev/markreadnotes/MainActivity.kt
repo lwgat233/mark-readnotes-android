@@ -17,7 +17,7 @@ import dev.markreadnotes.sync.SyncRepo
 class MainActivity : Activity() {
 
     companion object {
-        private const val BUILD_TAG = "0.1.0+r16"
+        private const val BUILD_TAG = "0.1.0+r20"
     }
 
     private lateinit var store: Store

@@ -2,7 +2,9 @@ mark-readnotes.android（随笔）产物清单
 更新：2026-09-22（第 8 轮：WebDAV 同步）
 包名：dev.markreadnotes　　版本：0.1.0
 
-apk/mark-readnotes-debug-20260922-r8.apk      ← 当前构件（页内标记 0.1.0+r15，WebDAV 同步）
+apk/mark-readnotes-debug-20260922-r10.apk     ← 当前构件（页内标记 0.1.0+r20：搜索 + SQLite v4 表 + 标签管理）
+apk/mark-readnotes-debug-20260922-r9.apk      ← 第 9 轮构件（页内标记 0.1.0+r17，搜索 + 预览样式照参照重做）
+apk/mark-readnotes-debug-20260922-r8.apk      ← 第 8 轮构件（页内标记 0.1.0+r15，WebDAV 同步）
   sha256 80fec198a1751982a8d067e88dc8f1ce353314dfd9b850ac1d59bad0ee03b3ab（干净构建，整包可复现）
 apk/mark-readnotes-debug-20260922-r7.apk      ← 第 7 轮构件（页内标记 0.1.0+r12，一个标签＝一个文件）
   sha256 dde4385633da6cf507017a1ede35db077605c77d9933ee58a0036f65b6eb28fd
@@ -42,6 +44,8 @@ source/mark-readnotes/          可构建的源码树（不含 build/ 与本机 
   app/src/main/assets/ui/vendor/katex/                   KaTeX 0.18.7（MIT，555KB，离线）
 
 docs/
+  渲染-后续怎么做.md            渲染的施工说明（本轮不做）：每项写清目标/改哪里/怎么做/判据/坑（复制键、点预览定位源码、点图放大、图片本地化、插件、KaTeX 扩展、性能、消毒边界）
+  开发计划.md                   第 9 轮重设：身份=功能创造者；功能队列（第 10–19 轮）+ 每轮固定动作 + 不做清单
   当前目标.md                   唯一权威：已完成/本轮/下一步、用户原话式需求、环境硬约束
   功能调用与意义.md              每个功能：界面入口 → 调用（op/参数/返回）→ 意义 → 判据；含 22 个 op 总表与待抄功能的 op 命名
   对照-KardLeaf-抄清单.md        逐条抄清单（出处文件 / 我们状态 / 不做的理由）+ 抄的顺序
