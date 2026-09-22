@@ -1,8 +1,10 @@
 mark-readnotes.android（随笔）产物清单
-更新：2026-09-22（第 6 轮：随笔独立目录 + 文件夹）
+更新：2026-09-22（第 7 轮：一个标签＝一个文件）
 包名：dev.markreadnotes　　版本：0.1.0
 
-apk/mark-readnotes-debug-20260922-r6.apk      ← 当前构件（页内标记 0.1.0+r11，随笔独立目录 + 文件夹）
+apk/mark-readnotes-debug-20260922-r7.apk      ← 当前构件（页内标记 0.1.0+r12，一个标签＝一个文件）
+  sha256 dde4385633da6cf507017a1ede35db077605c77d9933ee58a0036f65b6eb28fd
+apk/mark-readnotes-debug-20260922-r6.apk      ← 第 6 轮构件（页内标记 0.1.0+r11，随笔独立目录 + 文件夹）
   sha256 4f2e4b460d982390e6f17b0b516735421c93d6f7d57e1f7a7419120930a0496e
 apk/mark-readnotes-debug-20260922-r5.apk      ← 第 5 轮构件（页内标记 0.1.0+r9，渲染层重写）
   sha256 2a92c6d8c5f6f9f0bd6908c77523c0350fd555378d2393bf6a254d318f5e6ddf
@@ -49,15 +51,17 @@ docs/
   新需求规格-标签导出.md         导出与导入的规则、界面、判据（导入待定）
   验收清单-第5轮.md              渲染层重写的改造前后对照（16绿11红 → 29绿0红）
   验收清单-第6轮.md              随笔独立目录 + 文件夹（D1–D4）+ 五板块 83 条全绿
+  验收清单-第7轮.md              一个标签＝一个文件（D5 搬家 + 同名合并）+ 五板块 97 条全绿
   新需求规格-随笔独立目录.md     随笔独立目录 + 标签→文件夹映射（第 6 轮已实现，含 D1–D4 判据）
   参考与改进计划-KardLeaf.md     参考 waikr/KardLeaf 的功能对照表与合规规矩
-  问题与需求登记.md             P1–P17 现象/根因/修法/证据（含写空源文件的事故、验收脚本的假红来源、搬家重复块）
+  问题与需求登记.md             P1–P18 现象/根因/修法/证据（含写空源文件的事故、验收假红来源、搬家重复块与内容分裂）
   缺口清单.md                   还没做的（功能/交互/测试/已知限制）
 
 evidence/
-  构件哈希.txt / 构件哈希-r2..r6.txt                各版 apk 的 sha256
-  board-summary-r6.txt / board-summary-r4.txt     五板块结果汇总（r6：11/29/23/10/10）
-  board-store.txt / board-settings.txt            第 6 轮的存储与设置板块原始输出
+  构件哈希.txt / 构件哈希-r2..r7.txt                各版 apk 的 sha256
+  board-summary-r7.txt / board-summary-r6.txt / board-summary-r4.txt   五板块结果汇总（r7：11/29/37/10/10）
+  r7-folder.txt                                   第 7 轮实测的文件夹内文件
+  board-store.txt / board-settings.txt            最近一次存储与设置板块的原始输出（含 D5）
   coverage-r6.txt / page-coverage-r6.txt          覆盖自检（文件层面 / 界面自检读数）
   r6-tree.txt                                     第 6 轮实测的盘上目录树
   board-render-before.txt / board-render-after.txt  渲染层改造前后的同一份判据（16绿11红 → 29绿0红）

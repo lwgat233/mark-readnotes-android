@@ -28,7 +28,7 @@ OK   R6 代码块内不解析语法 | 0
 OK   R7 markdown 图片已加载 | True
 OK   R7 原始 HTML 图片已加载 | True
      图片：[('pic.png', 64), ('pic.png', 64)]
-     渲染读数：{"ms":57,"bytes":10852,"tables":1,"tasks":2,"nested":2,"li":8,"katex":4,"katexErr":0,"removedTags":3,"removedAttrs":3}
+     渲染读数：{"ms":72,"bytes":10848,"tables":1,"tasks":2,"nested":2,"li":8,"katex":4,"katexErr":0,"removedTags":3,"removedAttrs":3}
 OK   R8 渲染耗时 < 400ms | True
 OK   R9 第三方许可声明在 | True
 OK   R9 内置库来源与校验留档 | True

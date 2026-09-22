@@ -73,8 +73,12 @@ async function doSetTagFolder() {
   const folder = (el('set-tag-folder') && el('set-tag-folder').value || '').trim();
   if (!tag) { toast('先填标签', 2200); return; }
   try {
-    await call('src.setTagFolder', { tag: tag, folder: folder });
-    toast('「' + tag.replace(/^#/, '') + '」的块以后落到 ' + (folder || '随笔目录下'), 3000);
+    const r = await call('src.setTagFolder', { tag: tag, folder: folder });
+    const mv = r.move || {};
+    let msg = '「' + tag.replace(/^#/, '') + '」的块以后落到 ' + (folder || '随笔目录下');
+    if (mv.moved) msg += '，已把 ' + mv.blocks + ' 个块搬过去' + (mv.merged ? '（并进已有文件）' : '');
+    else if (r.moveError) msg += '，但搬家没成功：' + r.moveError;
+    toast(msg, 3600);
     await reload();
     openSettings();
   } catch (e) { toast('指不过去：' + e.message, 3400); }

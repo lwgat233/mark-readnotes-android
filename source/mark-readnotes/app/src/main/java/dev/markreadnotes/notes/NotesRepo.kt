@@ -396,7 +396,8 @@ class NotesRepo(private val store: Store) {
         return JSONObject().put("folder", clean).put("rel", full).put("docId", doc.docId)
     }
 
-    /** 把某个标签指到某个文件夹（只改索引映射；空 = 随笔根下）。下一次写这个标签的块时才落位。 */
+    /** 把某个标签指到某个文件夹（只改索引映射；空 = 随笔根下）。
+     *  已有文件要跟着走 —— 否则同一个标签的内容会分裂成两个文件（旧的那个留在原地，新块进新文件）。 */
     @Synchronized
     fun setTagFolder(tag: String, folder: String): JSONObject {
         val tg = tag.trim().removePrefix("#").ifBlank { throw IllegalStateException("标签不能为空") }
@@ -408,7 +409,50 @@ class NotesRepo(private val store: Store) {
         }
         db.setFolder(tg, clean)
         Logs.i("tag.folder tag=$tg folder=${clean.ifBlank { "(随笔根)" }}")
-        return JSONObject().put("tag", tg).put("folder", clean)
+        val res = JSONObject().put("tag", tg).put("folder", clean)
+        return try {
+            res.put("move", moveTagFile(tg, clean))
+        } catch (e: Exception) {
+            Logs.e("tag.folder move failed tag=$tg err=${e.message}")
+            res.put("moveError", e.message ?: "搬家失败")
+        }
+    }
+
+    /** 把某个标签现有的文件搬到它该在的文件夹里：复制 → 校验 → 删旧 → 索引改指。
+     *  目标位置已有同名文件就**按块合并**（同一个标签就是一个文件），合并前后块数必须对得上。 */
+    @Synchronized
+    fun moveTagFile(tag: String, folder: String): JSONObject {
+        val root = root() ?: throw IllegalStateException("还没有选笔记目录")
+        val src = db.source() ?: throw IllegalStateException("还没有选笔记目录")
+        val name = Md.fileNameForTag(tag)
+        val relDir = if (folder.isBlank()) Store.NODE else "${Store.NODE}/$folder"
+        val targetRel = "$relDir/$name"
+        val from = db.allFiles().firstOrNull { it.present == 1 && it.name == name && it.relPath != targetRel }
+            ?: return JSONObject().put("skipped", "没有需要搬的文件")
+        val textFrom = saf.readText(root.treeUri, from.docId)
+        val parent = saf.ensurePath(root.treeUri, root.rootDocId, relDir) ?: throw IllegalStateException("建不了目录：$relDir")
+        val hit = saf.children(root.treeUri, parent.docId).firstOrNull { it.name == name }
+        val blocksFrom = Md.split(textFrom)
+        val mergedText = if (hit != null) Md.renderFile(Md.split(saf.readText(root.treeUri, hit.docId)) + blocksFrom) else textFrom
+        val dst = hit ?: (saf.createMd(root.treeUri, parent.docId, name) ?: throw IllegalStateException("建不了文件：$targetRel"))
+        ctx.contentResolver.openOutputStream(saf.docUri(root.treeUri, dst.docId), "wt")?.use {
+            it.write(mergedText.toByteArray(Charsets.UTF_8)); it.flush()
+        } ?: throw IllegalStateException("写不进目标文件：$targetRel")
+        val back = saf.readText(root.treeUri, dst.docId)
+        if (Md.split(back).size != Md.split(mergedText).size) throw IllegalStateException("目标文件块数对不上，已停下（旧文件没删）")
+        if (!saf.delete(root.treeUri, from.docId)) throw IllegalStateException("删不掉旧文件：${from.relPath}")
+        val doc = saf.stat(root.treeUri, dst.docId) ?: throw IllegalStateException("搬完读不到目标文件")
+        val fid = db.upsertFile(src.id, saf.docUri(root.treeUri, dst.docId).toString(), dst.docId, name, tag, doc.size, doc.mtime, targetRel, folder)
+        db.repointBlocks(from.id, fid, saf.docUri(root.treeUri, dst.docId).toString())
+        db.dropFile(from.id)
+        loadFile(db.fileById(fid)!!, root, doc.mtime, doc.size)   // 重建该文件的块（按 raw 认领，不重复）
+        Logs.i("tag.folder move file=$name ${from.relPath} -> $targetRel blocks=${blocksFrom.size} merged=${hit != null}")
+        return JSONObject()
+            .put("moved", true)
+            .put("from", from.relPath)
+            .put("to", targetRel)
+            .put("blocks", blocksFrom.size)
+            .put("merged", hit != null)
     }
 
     /** 把还平铺在授权根下的 md 搬进随笔目录（建新→写→校验字节→删旧；任何一步失败就停） */

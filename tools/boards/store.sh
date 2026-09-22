@@ -14,6 +14,15 @@ LEGACY=legacyboard-$STAMP     # 模拟“旧布局：md 还平铺在根下”（
 # 归位：上一轮若被打断，根下或随笔目录里可能留着这个验收文件（否则“根下不堆 md”会假红）
 $ADB shell "rm -f /sdcard/Documents/mark-readnotes/legacyboard*.md /sdcard/Documents/mark-readnotes/随笔/legacyboard*.md" >/dev/null 2>&1
 
+# 把某个标签指到某个文件夹：走设置小窗里的真输入框与真按键，回提示文本
+map_tag() {
+  tap '#btn-settings' >/dev/null; sleep 1
+  ( cd "$ROOT" && $PROBE type '#set-tag' "$1" ) >/dev/null
+  ( cd "$ROOT" && $PROBE type '#set-tag-folder' "$2" ) >/dev/null
+  tap '[data-act=tagfolder]' >/dev/null; sleep 3
+  page 'document.getElementById("toast").textContent' | unq
+}
+
 # --- auth：SAF 持久授权在（重启后仍在 = 真的持久化了） ---
 S=$(page 'window.mrState().src')
 assert_true "store.auth 已授权笔记根" "$(echo "$S" | jget "d['has']")"
@@ -89,6 +98,48 @@ tap '#btn-more' >/dev/null; sleep 1
 page 'document.querySelector("[data-act=delete]") && document.querySelector("[data-act=delete]").click()' >/dev/null; sleep 1
 page 'document.querySelector("[data-act=delete]") && document.querySelector("[data-act=delete]").click()' >/dev/null; sleep 2
 
+# --- D5：已有的文件要跟着走（整文件搬家；目标已有同名则按块合并） ---
+MOVETAG=movetest$STAMP
+tap '#btn-new' >/dev/null; sleep 1
+( cd "$ROOT" && $PROBE type '#ed-heading' "整文件搬家 $STAMP" ) >/dev/null
+( cd "$ROOT" && $PROBE type '#ed-tags' "$MOVETAG" ) >/dev/null
+( cd "$ROOT" && $PROBE type '#ed-body' "搬之前在这里" ) >/dev/null
+tap '#btn-done' >/dev/null; sleep 2
+CNT_A=$(page 'window.mrState().cards')
+$ADB shell "ls $NODE_DIR" 2>/dev/null | tr -d '\r' | grep -q "$MOVETAG.md" && ok "store.move 搬家前文件在随笔目录" "$MOVETAG.md" || bad "store.move 搬家前没这个文件" "$MOVETAG.md"
+TOAST=$(map_tag "$MOVETAG" "$FOLDER")
+info "指过去提示：$TOAST"
+echo "$TOAST" | grep -q "已把 1 个块搬过去" && ok "store.move 提示里报了搬几个块" "$TOAST" || bad "store.move 提示没报搬家" "$TOAST"
+$ADB shell "ls $NODE_DIR/$FOLDER" 2>/dev/null | tr -d '\r' | grep -q "$MOVETAG.md" && ok "store.move 文件到了文件夹里" "$FOLDER/$MOVETAG.md" || bad "store.move 文件夹里没有它" "$MOVETAG.md"
+$ADB shell "ls $NODE_DIR" 2>/dev/null | tr -d '\r' | grep -q "^$MOVETAG.md$" && bad "store.move 旧位置还留着文件" "$MOVETAG.md" || ok "store.move 旧位置的文件没了" "已搬走"
+devcat "$NODE_DIR/$FOLDER/$MOVETAG.md"
+grep -q "搬之前在这里" /tmp/board_check.txt && ok "store.move 内容跟着走了" "ok" || bad "store.move 内容丢了" "缺"
+CNT_B=$(page 'window.mrState().cards')
+assert_eq "store.move 搬完块数没变" "$CNT_B" "$CNT_A"
+REL=$(page '(async()=>{const b=(await call("idx.blocks",{limit:60})).filter(x=>x.tag==="'"$MOVETAG"'")[0]||{};return b.relPath||"";})()' | unq)
+assert_eq "store.move 索引里的落位也改了" "$REL" "随笔/$FOLDER/$MOVETAG.md"
+tap '#sheet-close' >/dev/null; sleep 1
+
+# 合并：原地一个文件 + 文件夹里已有同名文件 → 合成一个（块数相加、两边都不丢）
+MERG=mergetest$STAMP
+$ADB shell "printf '# 原地的第一块\n#$MERG\n甲一号\n\n# 原地的第二块\n#$MERG\n甲二号\n' > $NODE_DIR/$MERG.md"
+$ADB shell "printf '# 文件夹里已有的块\n#$MERG\n乙一号\n' > $NODE_DIR/$FOLDER/$MERG.md"
+page '(async()=>{await call("idx.refresh");await reload();return true;})()' >/dev/null; sleep 1
+CNT_C=$(page 'window.mrState().cards')
+TOAST2=$(map_tag "$MERG" "$FOLDER")
+info "合并提示：$TOAST2"
+echo "$TOAST2" | grep -q "并进已有文件" && ok "store.merge 提示说了并进已有文件" "$TOAST2" || bad "store.merge 提示没说合并" "$TOAST2"
+CNT_D=$(page 'window.mrState().cards')
+assert_eq "store.merge 合并后总数没变（3 个块各一份）" "$CNT_D" "$CNT_C"
+devcat "$NODE_DIR/$FOLDER/$MERG.md"
+for h in 原地的第一块 原地的第二块 文件夹里已有的块; do
+  grep -q "$h" /tmp/board_check.txt && ok "store.merge 合并后的文件里有「$h」" "ok" || bad "store.merge 合并后丢了「$h」" "缺"
+done
+$ADB shell "ls $NODE_DIR" 2>/dev/null | tr -d '\r' | grep -q "^$MERG.md$" && bad "store.merge 原地文件还在" "$MERG.md" || ok "store.merge 原地文件已收尾" "只留文件夹里那份"
+ROWS=$(page '(async()=>{const f=(await call("idx.files")).filter(x=>x.name==="'"$MERG"'.md");return f.length;})()')
+assert_eq "store.merge 同名文件行只剩一个" "$ROWS" "1"
+tap '#sheet-close' >/dev/null; sleep 1
+
 # --- D2/D3：整理旧布局（根下的 md 搬进随笔目录，字节一致、块数不变） ---
 $ADB shell "printf '# 旧布局块一\n#legacyboard\n第一段正文\n\n# 旧布局块二\n#legacyboard\n第二段正文\n' > /sdcard/Documents/mark-readnotes/$LEGACY.md"
 # 调完刷新要让页面把状态取回来（ST.src 是设置的输入源；只调 op 不 reload，读到的还是旧值）
@@ -115,8 +166,8 @@ LEG2=$(page '(ST.src||{}).legacy')
 assert_eq "store.migrate 待整理清零" "$LEG2" "0"
 
 # 收尾：把验收用的标签映射撤掉（不然别的板块的验收块会被落到 boardfolder 里，造成跨板块串味）
-page '(async()=>{await call("src.setTagFolder",{tag:"'"$TAGF"'",folder:""});await reload();return true;})()' >/dev/null
-TF2=$(page '(ST.src.tagFolders||[]).filter(x=>x.tag==="'"$TAGF"'")[0].folder||"(空)"')
-info "收尾后该标签的文件夹：$TF2"
+page '(async()=>{for(const t of ["'"$TAGF"'","'"$MOVETAG"'","'"$MERG"'"]){await call("src.setTagFolder",{tag:t,folder:""});}await reload();return true;})()' >/dev/null
+TF2=$(page '(ST.src.tagFolders||[]).filter(x=>["'"$TAGF"'","'"$MOVETAG"'","'"$MERG"'"].indexOf(x.tag)>=0).map(x=>x.tag+"→"+(x.folder||"随笔")).join(",")||"(空)"')
+info "收尾后这些标签的文件夹：$TF2"
 
 finish_board $BOARD

@@ -7,7 +7,7 @@ OK   store.node 随笔目录名 | 随笔
 OK   store.scan 冷启动打的是 scan=skipped | True
 OK   store.scan 冷启动没有全目录 walk | 0
 OK   store.scan 只读索引也有数据 | True
-     冷启动后卡片数：14
+     冷启动后卡片数：22
 OK   store.write 正文在 md 文件里 | storetest.md
 OK   store.write 标签行在文件里 | #storetest
 OK   store.node 随笔目录里有 md（D1） | /sdcard/Documents/mark-readnotes/随笔
@@ -18,13 +18,29 @@ OK   store.folder 映射写进了索引 | boardfolder
 OK   store.folder 归属提示带上文件夹 | "归属文件：boardfolder/foldertest.md"
 OK   store.folder 该标签的块落在文件夹里 | boardfolder/foldertest.md
 OK   store.folder 内容确实写进了那个文件 | ok
+OK   store.move 搬家前文件在随笔目录 | movetest173657.md
+     指过去提示：「movetest173657」的块以后落到 boardfolder，已把 1 个块搬过去
+OK   store.move 提示里报了搬几个块 | 「movetest173657」的块以后落到 boardfolder，已把 1 个块搬过去
+OK   store.move 文件到了文件夹里 | boardfolder/movetest173657.md
+OK   store.move 旧位置的文件没了 | 已搬走
+OK   store.move 内容跟着走了 | ok
+OK   store.move 搬完块数没变 | 23
+OK   store.move 索引里的落位也改了 | 随笔/boardfolder/movetest173657.md
+     合并提示：「mergetest173657」的块以后落到 boardfolder，已把 2 个块搬过去（并进已有文件）
+OK   store.merge 提示说了并进已有文件 | 「mergetest173657」的块以后落到 boardfolder，已把 2 个块搬过去（并进已有文件）
+OK   store.merge 合并后总数没变（3 个块各一份） | 24
+OK   store.merge 合并后的文件里有「原地的第一块」 | ok
+OK   store.merge 合并后的文件里有「原地的第二块」 | ok
+OK   store.merge 合并后的文件里有「文件夹里已有的块」 | ok
+OK   store.merge 原地文件已收尾 | 只留文件夹里那份
+OK   store.merge 同名文件行只剩一个 | 1
 OK   store.migrate 待整理数 ≥1（D3 前置） | True
 OK   store.migrate 有待整理时才出现这个键 | 1
 OK   store.migrate 根下 md 归零（D2） | 0
-OK   store.migrate 文件到了随笔目录 | legacyboard-171543.md
+OK   store.migrate 文件到了随笔目录 | legacyboard-173657.md
 OK   store.migrate 搬完字节一致（D2） | cmp 相同
-OK   store.migrate 搬完块数没变（D3） | 14
+OK   store.migrate 搬完块数没变（D3） | 26
 OK   store.migrate 该文件的块都在（D3） | 2
 OK   store.migrate 待整理清零 | 0
-     收尾后该标签的文件夹："(空)"
----- 存储: OK=23 FAIL=0
+     收尾后这些标签的文件夹："foldertest→随笔,mergetest173657→随笔,movetest173657→随笔"
+---- 存储: OK=37 FAIL=0
