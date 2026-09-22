@@ -26,8 +26,9 @@ class MainActivity : Activity() {
 
     companion object {
         private const val REQ_TREE = 1001
+        private const val REQ_EXPORT_TREE = 1002
         private const val ORIGIN = "appassets.androidplatform.net"
-        private const val BUILD_TAG = "0.1.0+r4"
+        private const val BUILD_TAG = "0.1.0+r5"
     }
 
     private lateinit var web: WebView
@@ -37,7 +38,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repo = Repo(this)
-        ops = Ops(this, repo, BUILD_TAG) { runOnUiThread { pickTree() } }
+        ops = Ops(this, repo, BUILD_TAG, { runOnUiThread { pickTree(REQ_TREE) } }, { runOnUiThread { pickTree(REQ_EXPORT_TREE) } })
 
         // 冷启动只读 SQLite，不枚举目录（懒扫描）
         Logs.i("app.start build=$BUILD_TAG scan=skipped(reason=startup)")
@@ -146,7 +147,7 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun pickTree() {
+    private fun pickTree(requestCode: Int) {
         val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
             addFlags(
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
@@ -157,19 +158,19 @@ class MainActivity : Activity() {
             }
         }
         try {
-            startActivityForResult(i, REQ_TREE)
-            Logs.i("src.pick opened")
+            startActivityForResult(i, requestCode)
+            Logs.i(if (requestCode == REQ_EXPORT_TREE) "exp.pick opened" else "src.pick opened")
         } catch (e: Exception) {
-            Logs.e("src.pick failed err=${e.message}")
+            Logs.e("pick failed req=$requestCode err=${e.message}")
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode != REQ_TREE) return
+        if (requestCode != REQ_TREE && requestCode != REQ_EXPORT_TREE) return
         val uri = data?.data
         if (resultCode != RESULT_OK || uri == null) {
-            push("src.changed", JSONObject().put("cancelled", true))
+            push(if (requestCode == REQ_EXPORT_TREE) "exp.changed" else "src.changed", JSONObject().put("cancelled", true))
             return
         }
         try {
@@ -181,11 +182,17 @@ class MainActivity : Activity() {
         }
         Thread {
             try {
-                val r = repo.attachTree(uri)
-                push("src.changed", r)
+                if (requestCode == REQ_EXPORT_TREE) {
+                    push("exp.changed", repo.attachExportTree(uri))
+                } else {
+                    push("src.changed", repo.attachTree(uri))
+                }
             } catch (e: Throwable) {
-                Logs.e("src.attach failed err=${e.message}")
-                push("src.changed", JSONObject().put("error", e.message ?: "授权失败"))
+                Logs.e("attach failed req=$requestCode err=${e.message}")
+                push(
+                    if (requestCode == REQ_EXPORT_TREE) "exp.changed" else "src.changed",
+                    JSONObject().put("error", e.message ?: "授权失败")
+                )
             }
         }.start()
     }

@@ -1,8 +1,10 @@
 mark-readnotes.android（随笔）产物清单
-更新：2026-09-22（第 2 轮：TeX + 图片）
+更新：2026-09-22（第 3 轮：按标签导出）
 包名：dev.markreadnotes　　版本：0.1.0
 
-apk/mark-readnotes-debug-20260922-r2.apk      ← 当前构件（页内标记 0.1.0+r4）
+apk/mark-readnotes-debug-20260922-r3.apk      ← 当前构件（页内标记 0.1.0+r5，按标签导出）
+  sha256 165251ac41b0b3e6948bd66e63d34abef010271ad8366fbf7e55eba7b773eaf3
+apk/mark-readnotes-debug-20260922-r2.apk      ← 第 2 轮构件（页内标记 0.1.0+r4）
   sha256 e2a355781fd6de6aedcee9673d76f8269958602cbca9f1236f10360a340d46c9
 apk/mark-readnotes-debug-20260922.apk         ← 第 1 轮构件（页内标记 0.1.0+r1）
   sha256 4f7158c91c9556ba282fc609b13392eb515410c2b3a37190a8f7fc3551a6cc0f
@@ -27,13 +29,17 @@ docs/
   数据模型.md                   块/文件划分规则、SQLite 结构、懒扫描
   验收清单-第1轮.md              F1–F7 可复跑命令与实测值
   验收清单-第2轮.md              F8–F12 可复跑命令与实测值
-  问题与需求登记.md             P1–P7 现象/根因/修法/证据（含我自己写空源文件的事故）
+  验收清单-第3轮.md              F13–F18（按标签导出/排除/预览/写目录/分享）可复跑命令与实测值
+  新需求规格-标签导出.md         导出与导入的规则、界面、判据（导入待下一轮）
+  问题与需求登记.md             P1–P9 现象/根因/修法/证据（含我自己写空源文件的事故、导入冲突待定）
   缺口清单.md                   还没做的（功能/交互/测试/已知限制）
 
 evidence/
-  构件哈希.txt / 构件哈希-r2.txt     两个 apk 的 sha256
+  构件哈希.txt / 构件哈希-r2.txt / 构件哈希-r3.txt  各版 apk 的 sha256
   验收清单-第1轮数据.txt             第 1 轮原始读数（工具原样输出）
-  logcat-r1.txt / logcat-r2.txt      运行日志（scan=skipped / scan=single / img.serve / back.js）
+  logcat-r1.txt / logcat-r2.txt / logcat-r3.txt   运行日志（scan=skipped / img.serve / exp.plan|write|share）
+  r3-export-tree.txt / r3-export-sample.md        第 3 轮导出目录树与抽样文件
+  r3-seed/                                        第 3 轮测试用的外部 md（fagui.md / shipin.md）
   notes.db / notes-after-move.db / notes-final.db / notes-r4*.db   SQLite 快照（各阶段）
   paper-after-delete.md / paper-clean.md                          被编辑过的笔记文件快照
   katex-provenance.txt / katex-LICENSE-MIT.txt                    KaTeX 来源、校验与许可

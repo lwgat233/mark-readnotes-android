@@ -1,0 +1,13 @@
+--------- beginning of main
+09-22 07:59:40.862  4700  4700 I markreadnotes: app.start build=0.1.0+r5 scan=skipped(reason=startup)
+09-22 07:59:40.873  4700  4700 I markreadnotes: idx.state={"has":true,"treeUri":"content:\/\/com.android.externalstorage.documents\/tree\/primary%3ADocuments","pickedName":"Documents","rootLabel":"Documents\/mark-readnotes","exportRoot":"Documents\/mark-readnotes-export","files":4,"blocks":6,"lastScanAt":1790063868963}
+09-22 07:59:42.185  4700  4795 I markreadnotes: op=app.info
+09-22 07:59:42.211  4700  4796 I markreadnotes: op=src.get
+09-22 07:59:42.577  4700  4798 I markreadnotes: op=idx.blocks
+09-22 07:59:56.553  4700  4839 I markreadnotes: exp.plan(files=5,blocks=6,excluded=1)
+09-22 07:59:56.555  4700  4839 I markreadnotes: op=exp.plan
+09-22 07:59:56.667  4700  4840 I markreadnotes: exp.write(dir=Documents/mark-readnotes-export,files=5,new=0,over=5,dirs=5,ms=83)
+09-22 07:59:56.668  4700  4840 I markreadnotes: op=exp.writeDir
+09-22 07:59:56.813  4700  4841 I markreadnotes: exp.prepare(files=5,dir=/data/user/0/dev.markreadnotes/cache/share)
+09-22 07:59:56.821  4700  4841 I markreadnotes: exp.share(uris=5,action=android.intent.action.SEND_MULTIPLE,target=com.google.android.gms)
+09-22 07:59:56.832  4700  4841 I markreadnotes: op=exp.share

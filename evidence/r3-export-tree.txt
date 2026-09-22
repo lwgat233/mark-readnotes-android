@@ -1,0 +1,28 @@
+/sdcard/Documents/mark-readnotes-export:
+paper
+web
+法规
+视频
+
+/sdcard/Documents/mark-readnotes-export/paper:
+KaTeX 与图片验证.md
+PagedAttention 论文要点.md
+
+/sdcard/Documents/mark-readnotes-export/web:
+视频随手记：KV Cache 那期.md
+
+/sdcard/Documents/mark-readnotes-export/法规:
+2024
+标准
+
+/sdcard/Documents/mark-readnotes-export/法规/2024:
+2024 年的修订说明.md
+
+/sdcard/Documents/mark-readnotes-export/法规/标准:
+标准 A 的要点.md
+
+/sdcard/Documents/mark-readnotes-export/视频:
+RAG
+
+/sdcard/Documents/mark-readnotes-export/视频/RAG:
+B 站那期讲 RAG 的视频.md

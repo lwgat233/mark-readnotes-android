@@ -4,9 +4,9 @@
 原生层负责文件与索引。目前只有「随笔」一个板块，为以后加别的东西留了位置。
 
 - 包名 / applicationId：`dev.markreadnotes`　版本：`0.1.0`
-- 当前构件：`apk/mark-readnotes-debug-20260922-r2.apk`（页内标记 `0.1.0+r4`）
-  sha256 `e2a355781fd6de6aedcee9673d76f8269958602cbca9f1236f10360a340d46c9`
-  上一版：`apk/mark-readnotes-debug-20260922.apk`（`0.1.0+r1`，第 1 轮闭环）
+- 当前构件：`apk/mark-readnotes-debug-20260922-r3.apk`（页内标记 `0.1.0+r5`）
+  sha256 `165251ac41b0b3e6948bd66e63d34abef010271ad8366fbf7e55eba7b773eaf3`
+  历史：`…-r2.apk`（`0.1.0+r4`，公式/图片）、`…-20260922.apk`（`0.1.0+r1`，第 1 轮闭环）
 - 构建：JDK 17 + Gradle 8.7 + Android SDK（compileSdk 34 / minSdk 26 / targetSdk 34）
 
 ## 文档索引
@@ -18,6 +18,8 @@
 | 块/文件怎么划、SQLite 表、懒扫描规则 | `docs/数据模型.md` |
 | 第 1 轮怎么验的（授权→编辑→搬家→懒扫描） | `docs/验收清单-第1轮.md` |
 | 第 2 轮怎么验的（公式/图片/消毒/层级） | `docs/验收清单-第2轮.md` |
+| 第 3 轮怎么验的（按标签导出/排除/预览/分享） | `docs/验收清单-第3轮.md` |
+| 导出/导入的需求规格 | `docs/新需求规格-标签导出.md` |
 | 发现的问题与需求登记 | `docs/问题与需求登记.md` |
 | 还没做的（= 开发不足清单） | `docs/缺口清单.md` |
 | 环境配方（工具链/模拟器/镜像源） | `env/环境配方.txt` |

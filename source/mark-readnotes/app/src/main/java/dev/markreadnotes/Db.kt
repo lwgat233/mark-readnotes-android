@@ -145,6 +145,23 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 1) {
             out
         }
 
+    fun allBlocks(): List<BlockRow> = readableDatabase.rawQuery("SELECT * FROM block WHERE present=1 ORDER BY file_id, block_index", null).use { c ->
+        val out = ArrayList<BlockRow>()
+        while (c.moveToNext()) out.add(blockRow(c))
+        out
+    }
+
+    // ---------- meta（导出目录等长期配置） ----------
+
+    fun metaGet(key: String): String? =
+        readableDatabase.rawQuery("SELECT value FROM meta WHERE key=?", arrayOf(key)).use { c ->
+            if (c.moveToFirst()) c.getString(0) else null
+        }
+
+    fun metaPut(key: String, value: String) {
+        writableDatabase.execSQL("INSERT OR REPLACE INTO meta(key,value) VALUES(?,?)", arrayOf(key, value))
+    }
+
     fun insertBlock(fileId: Long, docUri: String, heading: String, tag: String, tags: String, body: String, raw: String, index: Int, fileMtime: Long, fileSize: Long, updatedAt: Long): Long {
         val cv = ContentValues().apply {
             put("file_id", fileId); put("doc_uri", docUri); put("heading", heading); put("tag", tag); put("tags", tags)

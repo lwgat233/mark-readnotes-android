@@ -3,6 +3,7 @@ package dev.markreadnotes
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.core.content.FileProvider
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -15,7 +16,8 @@ class Ops(
     private val ctx: Context,
     private val repo: Repo,
     private val buildTag: String,
-    private val pickTree: () -> Unit
+    private val pickTree: () -> Unit,
+    private val pickExport: () -> Unit
 ) {
 
     @Synchronized
@@ -68,7 +70,48 @@ class Ops(
             JSONObject().put("opened", true)
         }
 
+        // ---------- 导出（按标签） ----------
+        "exp.tags" -> repo.tagStats()
+        "exp.plan" -> repo.exportPlan(tagsFrom(a, "exclude"))
+        "exp.writeDir" -> repo.writeExport(tagsFrom(a, "exclude"))
+        "exp.share" -> share(repo.shareFiles(tagsFrom(a, "exclude")))
+        "src.pickExport" -> {
+            pickExport()
+            JSONObject().put("pending", true)
+        }
+
         else -> throw IllegalArgumentException("未知 op：$op")
+    }
+
+    /** 交给系统分享（FileProvider 一次性授权；没装能接收的应用时如实回报空目标） */
+    private fun share(files: List<java.io.File>): JSONObject {
+        if (files.isEmpty()) throw IllegalStateException("没有可分享的块")
+        val uris = files.map { FileProvider.getUriForFile(ctx, "${ctx.packageName}.files", it) }
+        val send = if (uris.size == 1) {
+            Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uris[0])
+        } else {
+            Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+        }
+        send.type = "text/markdown"
+        send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val targets = try {
+            ctx.packageManager.queryIntentActivities(send, 0).map { it.activityInfo.packageName }.distinct()
+        } catch (e: Exception) {
+            emptyList()
+        }
+        Logs.i("exp.share(uris=${uris.size},action=${send.action},target=${targets.joinToString(",")})")
+        ctx.startActivity(Intent.createChooser(send, "分享随笔").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        return JSONObject().put("uris", uris.size).put("action", send.action).put("targets", JSONArray(targets))
+    }
+
+    private fun tagsFrom(a: JSONObject, key: String): List<String> {
+        val arr: JSONArray? = a.optJSONArray(key)
+        if (arr != null) {
+            val out = ArrayList<String>()
+            for (i in 0 until arr.length()) out.add(arr.optString(i))
+            return out
+        }
+        return a.optString(key).split(" ", ",").filter { it.isNotBlank() }
     }
 
     private fun tagsOf(a: JSONObject): List<String> {

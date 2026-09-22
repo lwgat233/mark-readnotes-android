@@ -92,3 +92,10 @@ button.wide { width: 100%; }
 
 .toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 90;
   background: #2b3242; border: 1px solid var(--line); color: #fff; padding: 8px 14px; border-radius: 20px; font-size: 13px; }
+
+/* 导出小窗：排除标签芯片 + 预览文件树 */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 6px; }
+.ex-tag { padding: 5px 10px; min-height: 32px; font-size: 13px; border-radius: 16px; background: var(--panel-2); }
+.ex-tag.on { background: #7a2f3a; border-color: #a24b58; color: #fff; text-decoration: line-through; }
+#ex-tree .tree-dir { margin-top: 8px; font-size: 14px; color: var(--accent); }
+#ex-tree .tree-file { font-size: 13px; color: var(--dim); padding-left: 6px; }
