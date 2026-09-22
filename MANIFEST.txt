@@ -65,7 +65,7 @@ docs/
 
 evidence/
   构件哈希.txt / 构件哈希-r2..r8.txt                各版 apk 的 sha256
-  board-summary-r8.txt                            六板块结果汇总（r8：11/29/37/10/10/24 = 121 条）
+  board-summary-r8.txt                            六板块结果汇总（r8：11/29/38/10/10/24 = 122 条）
   board-sync.txt / dav-selftest.txt               第 8 轮同步板块原始输出 / WebDAV 服务自测（16 条）
   r7-folder.txt                                   第 7 轮实测的文件夹内文件
   board-store.txt / board-settings.txt            最近一次存储与设置板块的原始输出（含 D5）

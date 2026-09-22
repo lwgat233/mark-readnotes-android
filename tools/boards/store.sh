@@ -162,6 +162,10 @@ AFTER=$(page 'window.mrState().cards')
 assert_eq "store.migrate 搬完块数没变（D3）" "$AFTER" "$BEFORE"
 FB=$(page '(async()=>{const fs=await call("idx.files");const f=fs.filter(x=>x.relPath==="随笔/'"$LEGACY"'.md")[0]||{};return f.blocks||-1;})()')
 assert_eq "store.migrate 该文件的块都在（D3）" "$FB" "2"
+# 收尾：把这个验收文件（2 个块）也删掉，别留在真实的随笔目录里
+page '(async()=>{const b=(await call("idx.blocks",{limit:200})).filter(x=>x.file==="'"$LEGACY"'.md");for(const x of b){await call("blk.delete",{id:x.id});}await call("idx.refresh");return true;})()' >/dev/null
+LEFTOVER=$($ADB shell "ls $NODE_DIR/$LEGACY.md" 2>/dev/null | tr -d '\r')
+assert_eq "store.migrate 验收文件已清掉" "${LEFTOVER:-空}" "空"
 LEG2=$(page '(ST.src||{}).legacy')
 assert_eq "store.migrate 待整理清零" "$LEG2" "0"
 
