@@ -7,14 +7,17 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
 data class SourceRow(val id: Long, val treeUri: String, val rootDocId: String, val rootName: String, val kind: String, val lastScanAt: Long)
-data class FileRow(val id: Long, val sourceId: Long, val docUri: String, val docId: String, val name: String, val tag: String, val size: Long, val mtime: Long, val present: Int)
+data class FileRow(
+    val id: Long, val sourceId: Long, val docUri: String, val docId: String, val name: String, val tag: String,
+    val size: Long, val mtime: Long, val present: Int, val relPath: String, val folder: String
+)
 data class BlockRow(
     val id: Long, val fileId: Long, val docUri: String, val heading: String, val tag: String,
     val tags: String, val body: String, val raw: String, val charCount: Int, val index: Int, val updatedAt: Long
 )
 
 /** SQLite：索引与“最近编辑”顺序的权威源（正文的权威源始终是磁盘上的 md） */
-class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 1) {
+class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -23,7 +26,8 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 1) {
         )
         db.execSQL(
             """CREATE TABLE note_file(id INTEGER PRIMARY KEY, source_id INTEGER, doc_uri TEXT UNIQUE, doc_id TEXT,
-               name TEXT, tag TEXT, size INTEGER, mtime INTEGER, last_scan_at INTEGER, present INTEGER DEFAULT 1)"""
+               name TEXT, tag TEXT, size INTEGER, mtime INTEGER, last_scan_at INTEGER, present INTEGER DEFAULT 1,
+               rel_path TEXT, folder TEXT)"""
         )
         db.execSQL(
             """CREATE TABLE block(id INTEGER PRIMARY KEY, file_id INTEGER, doc_uri TEXT, heading TEXT, tag TEXT,
@@ -32,10 +36,17 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 1) {
         )
         db.execSQL("CREATE INDEX idx_block_updated ON block(updated_at DESC)")
         db.execSQL("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)")
+        // 标签 → 文件夹（文件夹是标签的一个属性；空 = 直接放随笔根下）
+        db.execSQL("CREATE TABLE tag_folder(tag TEXT PRIMARY KEY, folder TEXT, updated_at INTEGER)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) {
-        // v1 尚无迁移；将来按 expand → migrate → contract 走
+        // v1 → v2：随笔独立目录 + 文件夹（expand：先加列加表，旧数据原样保留）
+        if (old < 2) {
+            runCatching { db.execSQL("ALTER TABLE note_file ADD COLUMN rel_path TEXT") }
+            runCatching { db.execSQL("ALTER TABLE note_file ADD COLUMN folder TEXT") }
+            db.execSQL("CREATE TABLE IF NOT EXISTS tag_folder(tag TEXT PRIMARY KEY, folder TEXT, updated_at INTEGER)")
+        }
     }
 
     // ---------- source ----------
@@ -81,7 +92,20 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 1) {
         out
     }
 
-    fun upsertFile(sourceId: Long, docUri: String, docId: String, name: String, tag: String, size: Long, mtime: Long): Long {
+    fun fileByRel(sourceId: Long, relPath: String): FileRow? =
+        readableDatabase.rawQuery("SELECT * FROM note_file WHERE source_id=? AND rel_path=?", arrayOf(sourceId.toString(), relPath)).use { c ->
+            if (c.moveToFirst()) fileRow(c) else null
+        }
+
+    /** 还留在授权根下、没搬进随笔目录的文件（迁移用） */
+    fun legacyFiles(): List<FileRow> =
+        readableDatabase.rawQuery("SELECT * FROM note_file WHERE present=1 AND (rel_path IS NULL OR rel_path NOT LIKE ?)", arrayOf("随笔/%")).use { c ->
+            val out = ArrayList<FileRow>()
+            while (c.moveToNext()) out.add(fileRow(c))
+            out
+        }
+
+    fun upsertFile(sourceId: Long, docUri: String, docId: String, name: String, tag: String, size: Long, mtime: Long, relPath: String = "", folder: String = ""): Long {
         val existing = fileByDocUri(docUri)
         val cv = ContentValues().apply {
             put("source_id", sourceId)
@@ -91,6 +115,8 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 1) {
             put("tag", tag)
             put("size", size)
             put("mtime", mtime)
+            put("rel_path", relPath)
+            put("folder", folder)
             put("last_scan_at", System.currentTimeMillis())
             put("present", 1)
         }
@@ -101,6 +127,25 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 1) {
         }
     }
 
+    // ---------- tag_folder（标签 → 文件夹 的映射） ----------
+
+    fun folderOf(tag: String): String =
+        readableDatabase.rawQuery("SELECT folder FROM tag_folder WHERE tag=?", arrayOf(tag)).use { c ->
+            if (c.moveToFirst()) c.getString(0) ?: "" else ""
+        }
+
+    fun setFolder(tag: String, folder: String) {
+        val cv = ContentValues().apply { put("tag", tag); put("folder", folder); put("updated_at", System.currentTimeMillis()) }
+        writableDatabase.insertWithOnConflict("tag_folder", null, cv, SQLiteDatabase.CONFLICT_REPLACE)
+    }
+
+    fun allFolders(): List<Pair<String, String>> =
+        readableDatabase.rawQuery("SELECT tag,folder FROM tag_folder ORDER BY tag", null).use { c ->
+            val out = ArrayList<Pair<String, String>>()
+            while (c.moveToNext()) out.add((c.getString(0) ?: "") to (c.getString(1) ?: ""))
+            out
+        }
+
     fun setFileMeta(fileId: Long, size: Long, mtime: Long, tag: String) {
         writableDatabase.execSQL("UPDATE note_file SET size=?, mtime=?, tag=?, last_scan_at=? WHERE id=?",
             arrayOf(size, mtime, tag, System.currentTimeMillis(), fileId))
@@ -108,6 +153,16 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 1) {
 
     fun setFilePresent(fileId: Long, present: Int) {
         writableDatabase.execSQL("UPDATE note_file SET present=? WHERE id=?", arrayOf(present, fileId))
+    }
+
+    /** 文件被标为不在时，它名下的块也一起标掉（索引一致性：不留查不到归属的孤儿块） */
+    fun setBlocksPresentOfFile(fileId: Long, present: Int) {
+        writableDatabase.execSQL("UPDATE block SET present=? WHERE file_id=?", arrayOf(present, fileId))
+    }
+
+    /** 物理搬家后把块的行改指到新文件（保住块的 id 与“最近编辑”顺序，避免被当成新块重复入库） */
+    fun repointBlocks(fromFileId: Long, toFileId: Long, docUri: String) {
+        writableDatabase.execSQL("UPDATE block SET file_id=?, doc_uri=? WHERE file_id=?", arrayOf(toFileId, docUri, fromFileId))
     }
 
     fun dropFile(fileId: Long) {
@@ -120,7 +175,8 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "notes.db", null, 1) {
         c.getString(c.getColumnIndexOrThrow("doc_uri")) ?: "", c.getString(c.getColumnIndexOrThrow("doc_id")) ?: "",
         c.getString(c.getColumnIndexOrThrow("name")) ?: "", c.getString(c.getColumnIndexOrThrow("tag")) ?: "",
         c.getLong(c.getColumnIndexOrThrow("size")), c.getLong(c.getColumnIndexOrThrow("mtime")),
-        c.getInt(c.getColumnIndexOrThrow("present"))
+        c.getInt(c.getColumnIndexOrThrow("present")),
+        c.getString(c.getColumnIndex("rel_path")) ?: "", c.getString(c.getColumnIndex("folder")) ?: ""
     )
 
     // ---------- block ----------

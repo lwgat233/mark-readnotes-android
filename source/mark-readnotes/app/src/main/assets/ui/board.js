@@ -14,12 +14,14 @@ function openBoard(id) {
   board.id = id || null;
   if (id) {
     call('blk.get', { id: id }).then(function (b) {
+      board.folder = b.folder || '';      // 这个块所在文件夹：预览里的相对图片按它解析
       fillBoard(b.heading, (b.tags || []).join(' '), b.body);
       showBoard();
     }).catch(function (e) { toast('打不开这个块：' + e.message, 3000); });
   } else {
     // 新块：标签预填“上次用过的标签”，没有就留空（留空即归 unsorted.md，由提示行说明）
     const lastTag = (ST.blocks[0] && (ST.blocks[0].tags || [])[0]) || '';
+    board.folder = '';
     fillBoard('', lastTag, '');
     showBoard();
     setTimeout(function () { el('ed-heading').focus(); }, 260);
@@ -34,7 +36,14 @@ function updateTagHint() {
   const tags = tagList();
   const first = tags[0] || DEFAULT_TAG;
   const name = /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(first) ? first + '.md' : '（自动命名）';
-  el('tag-hint').textContent = '归属文件：' + name + (tags.length > 1 ? '　其余标签仅备注' : '');
+  const folder = folderOfTag(first);
+  el('tag-hint').textContent = '归属文件：' + (folder ? folder + '/' : '') + name + (tags.length > 1 ? '　其余标签仅备注' : '');
+}
+/* 标签 → 文件夹（设置里指过去的那份映射；空 = 就在随笔目录下） */
+function folderOfTag(tag) {
+  const list = (ST.src && ST.src.tagFolders) || [];
+  const hit = list.filter(function (x) { return x.tag === tag; })[0];
+  return hit ? (hit.folder || '') : '';
 }
 
 async function saveBoard(force) {
@@ -78,7 +87,7 @@ function setPreview(on) {
   el('ed-body').classList.toggle('hidden', previewOn);
   el('btn-preview').textContent = previewOn ? '编辑' : '预览';
   if (previewOn) {
-    renderInto(el('preview'), el('ed-body').value);
+    renderInto(el('preview'), el('ed-body').value, board.folder);
   }
 }
 

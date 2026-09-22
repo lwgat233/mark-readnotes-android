@@ -54,11 +54,17 @@ class NotesRepo(private val store: Store) {
     fun sourceJson(): JSONObject {
         val s = db.source() ?: return JSONObject().put("has", false)
         val (files, blocks, scan) = db.stats()
+        val legacy = db.legacyFiles()
         return JSONObject()
             .put("has", true)
             .put("treeUri", s.treeUri)
             .put("pickedName", s.rootName)
             .put("rootLabel", "${s.rootName}/mark-readnotes")
+            .put("nodeLabel", store.nodeLabel())
+            .put("node", Store.NODE)
+            .put("legacy", legacy.size)
+            .put("legacyNames", JSONArray(legacy.map { it.name }))
+            .put("tagFolders", JSONArray(db.allFolders().map { JSONObject().put("tag", it.first).put("folder", it.second) }))
             .put("exportRoot", db.metaGet("export_root_label") ?: "")
             .put("files", files)
             .put("blocks", blocks)
@@ -67,32 +73,58 @@ class NotesRepo(private val store: Store) {
 
     // ---------------------- 扫描与索引 ----------------------
 
-    /** 目录枚举：只有首次授权与用户主动刷新才走这里（懒扫描） */
+    /** 目录枚举：只有首次授权与用户主动刷新才走这里（懒扫描）；只覆盖随笔目录，不扫整个授权目录 */
     @Synchronized
     fun refresh(full: Boolean): Pair<Int, Int> {
         val root = root() ?: return 0 to 0
         val src = db.source() ?: return 0 to 0
+        val node = store.node() ?: run { Logs.e("scan=node-missing"); return 0 to 0 }
         val t0 = System.currentTimeMillis()
-        val kids = saf.children(root.treeUri, root.rootDocId)
-            .filter { it.mime != "vnd.android.document/directory" && it.name.lowercase().endsWith(".md") }
-        var changed = 0
         val seen = HashSet<String>()
-        for (c in kids) {
-            val uri = saf.docUri(root.treeUri, c.docId).toString()
-            seen.add(uri)
-            val row = db.fileByDocUri(uri)
-            val stale = row == null || full || row.mtime != c.mtime || row.size != c.size
-            val fid = db.upsertFile(src.id, uri, c.docId, c.name, c.name.removeSuffix(".md"), c.size, c.mtime)
-            if (stale) {
-                loadFile(db.fileById(fid)!!, root, c.mtime, c.size)
-                changed++
-            }
+        val changed = intArrayOf(0)
+        // 1) 随笔目录（含子文件夹，往下两层）
+        scanDir(root, src.id, node.docId, Store.NODE, full, seen, changed, 0)
+        // 2) 兼容旧布局：还平铺在授权根下的 md（用户点「整理到随笔目录」之前仍能读）
+        var legacy = 0
+        for (c in saf.children(root.treeUri, root.rootDocId)) {
+            if (c.mime == Store.DIR_MIME || !c.name.lowercase().endsWith(".md")) continue
+            indexFile(root, src.id, c, "", "", full, seen, changed)
+            legacy++
         }
-        for (f in db.allFiles()) if (f.docUri !in seen) db.setFilePresent(f.id, 0)
+        for (f in db.allFiles()) if (f.docUri !in seen) { db.setFilePresent(f.id, 0); db.setBlocksPresentOfFile(f.id, 0) }
         db.touchScan(System.currentTimeMillis())
-        Logs.i("scan=walk(files=${kids.size},changed=$changed,ms=${System.currentTimeMillis() - t0})")
-        return kids.size to db.stats().second
+        Logs.i("scan=walk(files=${seen.size},changed=${changed[0]},legacy=$legacy,ms=${System.currentTimeMillis() - t0})")
+        return seen.size to db.stats().second
     }
+
+    /** 一个目录下的 md（按相对路径收进索引）；子文件夹最多再往下两层 */
+    private fun scanDir(root: Root, srcId: Long, dirDocId: String, relDir: String, full: Boolean, seen: MutableSet<String>, changed: IntArray, depth: Int) {
+        for (c in saf.children(root.treeUri, dirDocId)) {
+            if (c.mime == Store.DIR_MIME) {
+                if (depth < 2) scanDir(root, srcId, c.docId, "$relDir/${c.name}", full, seen, changed, depth + 1)
+                continue
+            }
+            if (!c.name.lowercase().endsWith(".md")) continue
+            indexFile(root, srcId, c, relDir, folderOfRel(relDir), full, seen, changed)
+        }
+    }
+
+    /** 把一个盘上的 md 收进索引（只有变了或强制刷新才真解析） */
+    private fun indexFile(root: Root, srcId: Long, c: Saf.Doc, relDir: String, folder: String, full: Boolean, seen: MutableSet<String>, changed: IntArray) {
+        val uri = saf.docUri(root.treeUri, c.docId).toString()
+        seen.add(uri)
+        val row = db.fileByDocUri(uri)
+        val stale = row == null || full || row.mtime != c.mtime || row.size != c.size
+        val rel = if (relDir.isBlank()) c.name else "$relDir/${c.name}"
+        val fid = db.upsertFile(srcId, uri, c.docId, c.name, c.name.removeSuffix(".md"), c.size, c.mtime, rel, folder)
+        if (stale) {
+            loadFile(db.fileById(fid)!!, root, c.mtime, c.size)
+            changed[0]++
+        }
+    }
+
+    /** 相对路径里的文件夹部分："随笔" → ""；"随笔/网页随口" → "网页随笔" */
+    private fun folderOfRel(relDir: String): String = relDir.removePrefix(Store.NODE).trim('/')
 
     /** 单文件懒校验：打开某块之前才 stat 它所属的文件 */
     private fun lazyCheck(file: FileRow, root: Root): Boolean {
@@ -148,11 +180,14 @@ class NotesRepo(private val store: Store) {
         return blocks.size
     }
 
-    /** 找/建某个标签对应的 md 文件 */
+    /** 找/建某个标签对应的 md 文件（位置由「标签 → 文件夹」映射决定；都放随笔目录里） */
     private fun ensureFileForTag(root: Root, tag: String): FileRow {
         val src = db.source() ?: throw IllegalStateException("还没有选笔记目录")
         val name = Md.fileNameForTag(tag)
-        val existing = db.fileByName(src.id, name)
+        val folder = db.folderOf(tag).trim('/')
+        val relDir = if (folder.isBlank()) Store.NODE else "${Store.NODE}/$folder"
+        val rel = "$relDir/$name"
+        val existing = db.fileByRel(src.id, rel)
         if (existing != null) {
             val doc = saf.stat(root.treeUri, existing.docId)
             if (doc != null) {
@@ -161,10 +196,20 @@ class NotesRepo(private val store: Store) {
             }
             db.setFilePresent(existing.id, 0)
         }
-        val created = saf.createMd(root.treeUri, root.rootDocId, name)
-            ?: throw IllegalStateException("建不了文件：$name")
-        val fid = db.upsertFile(src.id, saf.docUri(root.treeUri, created.docId).toString(), created.docId, name, tag, created.size, created.mtime)
-        Logs.i("file.create name=$name tag=$tag")
+        // 旧布局兼容：同名文件还平铺在授权根下就先用着（用户点「整理」才搬）
+        db.fileByName(src.id, name)?.let { legacyRow ->
+            val doc = saf.stat(root.treeUri, legacyRow.docId)
+            if (doc != null && legacyRow.relPath == legacyRow.name) {
+                Logs.i("file.legacy name=$name（还在授权根下，未迁移）")
+                return db.fileById(legacyRow.id)!!
+            }
+        }
+        val parent = saf.ensurePath(root.treeUri, root.rootDocId, relDir)
+            ?: throw IllegalStateException("建不了目录：$relDir")
+        val created = saf.createMd(root.treeUri, parent.docId, name)
+            ?: throw IllegalStateException("建不了文件：$rel")
+        val fid = db.upsertFile(src.id, saf.docUri(root.treeUri, created.docId).toString(), created.docId, name, tag, created.size, created.mtime, rel, folder)
+        Logs.i("file.create rel=$rel tag=$tag")
         return db.fileById(fid)!!
     }
 
@@ -200,6 +245,8 @@ class NotesRepo(private val store: Store) {
                     .put("preview", preview(b.body))
                     .put("charCount", b.charCount)
                     .put("file", f?.name ?: "?")
+                    .put("relPath", f?.relPath ?: "")
+                    .put("folder", f?.folder ?: "")
                     .put("offline", f != null && f.present == 0)
                     .put("updatedAt", b.updatedAt)
             )
@@ -213,6 +260,7 @@ class NotesRepo(private val store: Store) {
             arr.put(
                 JSONObject()
                     .put("id", f.id).put("name", f.name).put("tag", f.tag)
+                    .put("relPath", f.relPath).put("folder", f.folder)
                     .put("blocks", db.blocksOfFile(f.id).size).put("present", f.present)
             )
         }
@@ -230,7 +278,9 @@ class NotesRepo(private val store: Store) {
         return JSONObject()
             .put("id", b.id).put("heading", b.heading).put("tag", b.tag)
             .put("tags", JSONArray(tagList(b))).put("body", b.body)
-            .put("charCount", b.charCount).put("file", f?.name ?: "?").put("updatedAt", b.updatedAt)
+            .put("charCount", b.charCount).put("file", f?.name ?: "?")
+            .put("relPath", f?.relPath ?: "").put("folder", f?.folder ?: "")
+            .put("updatedAt", b.updatedAt)
     }
 
     // ---------------------- 写 ----------------------
@@ -244,25 +294,25 @@ class NotesRepo(private val store: Store) {
 
         val effTags = tags.map { it.trim().removePrefix("#") }.filter { it.isNotBlank() }.ifEmpty { listOf(Md.DEFAULT_TAG) }
         val newTag = effTags.first()
-        val newName = Md.fileNameForTag(newTag)
         val edited = BData(heading, effTags, body)
         val rows = db.blocksOfFile(file.id)
         var moved = false
 
-        if (newName == file.name) {
+        // 目标文件由「第一个标签 + 标签→文件夹映射」决定；同一个文件就原地改，换了文件才搬家
+        val target = ensureFileForTag(root, newTag)
+        if (target.id == file.id) {
             val list = rows.map { r -> if (r.id == id) edited else BData(r.heading, tagList(r), r.body) }
             val pos = rows.indexOfFirst { it.id == id }.coerceAtLeast(0)
             rewrite(root, file, list, preferId = id, preferIndex = pos, touchId = id)
         } else {
             moved = true
             // 先落到新文件（块的行会改到新文件），再收尾老文件，避免被当成“已删除”
-            val target = ensureFileForTag(root, newTag)
             val trows = db.blocksOfFile(target.id)
             val tlist = trows.map { r -> BData(r.heading, tagList(r), r.body) } + edited
             rewrite(root, target, tlist, preferId = id, preferIndex = tlist.size - 1, touchId = id)
             val oldList = rows.filter { it.id != id }.map { r -> BData(r.heading, tagList(r), r.body) }
             rewrite(root, file, oldList)
-            Logs.i("block.move id=$id ${file.name} -> ${target.name}")
+            Logs.i("block.move id=$id ${file.relPath} -> ${target.relPath}")
         }
         val after = db.blockById(id)
         return JSONObject()
@@ -301,7 +351,7 @@ class NotesRepo(private val store: Store) {
         return JSONObject().put("id", id).put("deleted", true)
     }
 
-    /** 本地图片（md 里的相对路径）：按笔记根逐级解析，只允许留在根目录内部 */
+    /** 本地图片（md 里的相对路径）：先按随笔目录解析（页面给的路径已带上所在文件夹），再退回授权根（旧布局） */
     fun findImage(rel: String): Saf.Doc? {
         val root = root() ?: return null
         val clean = rel.trim().removePrefix("./").removePrefix("/")
@@ -309,20 +359,106 @@ class NotesRepo(private val store: Store) {
             Logs.e("img.reject rel=${rel.take(80)}")
             return null
         }
-        var parentId = root.rootDocId
+        val node = store.node(false)
+        if (node != null) resolveFrom(root, node.docId, clean, "随笔")?.let { return it }
+        return resolveFrom(root, root.rootDocId, clean, "根")
+    }
+
+    /** 从某个目录逐级解析相对路径，只允许留在该目录内部 */
+    private fun resolveFrom(root: Root, startDocId: String, clean: String, tag: String): Saf.Doc? {
+        var parentId = startDocId
         val parts = clean.split("/")
         for ((i, seg) in parts.withIndex()) {
             val hit = saf.children(root.treeUri, parentId).firstOrNull { it.name == seg } ?: run {
-                Logs.e("img.miss rel=$clean at=$seg")
+                Logs.i("img.miss rel=$clean at=$seg from=$tag")
                 return null
             }
             if (i == parts.size - 1) {
-                Logs.i("img.serve rel=$clean mime=${hit.mime} size=${hit.size}")
+                Logs.i("img.serve rel=$clean from=$tag mime=${hit.mime} size=${hit.size}")
                 return hit
             }
             parentId = hit.docId
         }
         return null
+    }
+
+    // ---------------------- 文件夹（标签 → 文件夹的映射） ----------------------
+
+    /** 建文件夹（一层层往下）；只允许建在随笔目录里 */
+    @Synchronized
+    fun mkdir(relDir: String): JSONObject {
+        val root = root() ?: throw IllegalStateException("还没有选笔记目录")
+        val clean = relDir.trim().trim('/')
+        if (clean.isBlank() || clean.contains("..")) throw IllegalStateException("文件夹名不合法")
+        val full = "${Store.NODE}/$clean"
+        val doc = saf.ensurePath(root.treeUri, root.rootDocId, full) ?: throw IllegalStateException("建不了目录：$full")
+        Logs.i("node.mkdir rel=$full")
+        return JSONObject().put("folder", clean).put("rel", full).put("docId", doc.docId)
+    }
+
+    /** 把某个标签指到某个文件夹（只改索引映射；空 = 随笔根下）。下一次写这个标签的块时才落位。 */
+    @Synchronized
+    fun setTagFolder(tag: String, folder: String): JSONObject {
+        val tg = tag.trim().removePrefix("#").ifBlank { throw IllegalStateException("标签不能为空") }
+        val clean = folder.trim().trim('/')
+        if (clean.isNotBlank()) {
+            val root = root() ?: throw IllegalStateException("还没有选笔记目录")
+            saf.findPath(root.treeUri, root.rootDocId, "${Store.NODE}/$clean")
+                ?: throw IllegalStateException("文件夹不存在：$clean（先用「新建文件夹」建一个）")
+        }
+        db.setFolder(tg, clean)
+        Logs.i("tag.folder tag=$tg folder=${clean.ifBlank { "(随笔根)" }}")
+        return JSONObject().put("tag", tg).put("folder", clean)
+    }
+
+    /** 把还平铺在授权根下的 md 搬进随笔目录（建新→写→校验字节→删旧；任何一步失败就停） */
+    @Synchronized
+    fun migrateLegacy(): JSONObject {
+        val root = root() ?: throw IllegalStateException("还没有选笔记目录")
+        val src = db.source() ?: throw IllegalStateException("还没有选笔记目录")
+        val node = store.node() ?: throw IllegalStateException("建不了随笔目录")
+        val moved = ArrayList<String>()
+        val failed = ArrayList<String>()
+        for (f in db.legacyFiles()) {
+            try {
+                val bytes = saf.readText(root.treeUri, f.docId).toByteArray(Charsets.UTF_8)
+                // 随笔目录里已有同名文件：内容一样就只收尾旧文件；不一样就停下报清楚（绝不覆盖数据）
+                val clash = saf.children(root.treeUri, node.docId).firstOrNull { it.name == f.name }
+                if (clash != null) {
+                    val there = saf.readText(root.treeUri, clash.docId).toByteArray(Charsets.UTF_8)
+                    if (!there.contentEquals(bytes)) {
+                        failed.add("${f.name}：随笔目录里已有同名但内容不同的文件，没动")
+                        Logs.e("node.migrate file=${f.name} clash-different")
+                        break
+                    }
+                    if (!saf.delete(root.treeUri, f.docId)) throw IllegalStateException("删不掉旧文件")
+                    db.setFilePresent(f.id, 0)
+                    db.setBlocksPresentOfFile(f.id, 0)
+                    moved.add("${f.name}(同名同内容，只删旧)")
+                    Logs.i("node.migrate file=${f.name} same-content ok")
+                    continue
+                }
+                val created = saf.createMd(root.treeUri, node.docId, f.name) ?: throw IllegalStateException("建不了新文件")
+                val out = ctx.contentResolver.openOutputStream(saf.docUri(root.treeUri, created.docId), "wt")
+                    ?: throw IllegalStateException("写不进新文件")
+                out.use { it.write(bytes); it.flush() }
+                val back = saf.stat(root.treeUri, created.docId) ?: throw IllegalStateException("写完读不到")
+                if (back.size != bytes.size.toLong()) throw IllegalStateException("字节数不一致（${back.size} vs ${bytes.size}）")
+                if (!saf.delete(root.treeUri, f.docId)) throw IllegalStateException("删不掉旧文件")
+                // 块的行改指到新文件（保住 id 与“最近编辑”顺序），再收掉旧文件行：绝不让块被重复入库
+                val fid = db.upsertFile(src.id, saf.docUri(root.treeUri, created.docId).toString(), created.docId, f.name, f.tag, back.size, back.mtime, "${Store.NODE}/${f.name}", "")
+                db.repointBlocks(f.id, fid, saf.docUri(root.treeUri, created.docId).toString())
+                db.dropFile(f.id)
+                moved.add(f.name)
+                Logs.i("node.migrate file=${f.name} bytes=${bytes.size} ok")
+            } catch (e: Exception) {
+                failed.add("${f.name}：${e.message}")
+                Logs.e("node.migrate file=${f.name} failed err=${e.message}")
+                break   // 任何一步失败就停下，不半截继续
+            }
+        }
+        refresh(true)
+        return JSONObject().put("moved", JSONArray(moved)).put("failed", JSONArray(failed)).put("left", db.legacyFiles().size)
     }
 
     /** 取图片字节流（给 WebView 的虚拟源用） */

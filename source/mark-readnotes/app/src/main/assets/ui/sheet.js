@@ -9,6 +9,27 @@ function sheetShow(title, rows, actions) {
   rows.forEach(function (r) {
     const d = document.createElement('div'); d.className = 'row';
     const k = document.createElement('div'); k.className = 'k'; k.textContent = r.k;
+    if (r.items) {   // 行里带输入框/行内按键（输入与它自己的动作挨着，用户不用猜哪个键管哪个框）
+      const box = document.createElement('div'); box.className = 'v controls';
+      r.items.forEach(function (it) {
+        if (it.id) {
+          const inp = document.createElement('input');
+          inp.id = it.id; inp.type = 'text'; inp.placeholder = it.ph || '';
+          if (it.value) inp.value = it.value;
+          box.appendChild(inp);
+        }
+        if (it.text) { const t = document.createElement('span'); t.className = 'hintline'; t.textContent = it.text; box.appendChild(t); }
+        if (it.btn) {
+          const b = document.createElement('button');
+          if (it.btn.act) b.dataset.act = it.btn.act;
+          b.textContent = it.btn.label;
+          b.addEventListener('click', it.btn.fn);
+          box.appendChild(b);
+        }
+      });
+      d.appendChild(k); d.appendChild(box); body.appendChild(d);
+      return;
+    }
     const v = document.createElement('div'); v.className = 'v'; v.textContent = r.v;
     d.appendChild(k); d.appendChild(v); body.appendChild(d);
   });

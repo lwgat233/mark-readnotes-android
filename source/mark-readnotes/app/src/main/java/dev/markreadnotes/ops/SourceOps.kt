@@ -6,15 +6,16 @@ import org.json.JSONObject
 /** src.* / idx.* —— 目录授权与索引（懒扫描规则住在这里） */
 object SourceOps {
     fun handle(op: String, a: JSONObject, notes: NotesRepo, pickTree: () -> Unit, pickExport: () -> Unit): Any = when (op) {
-        "src.pick" -> {
-            pickTree()
+        "src.pick", "src.pickExport" -> {
+            if (op == "src.pick") pickTree() else pickExport()
             JSONObject().put("pending", true)
         }
 
-        "src.pickExport" -> {
-            pickExport()
-            JSONObject().put("pending", true)
-        }
+        "src.mkdir" -> notes.mkdir(a.optString("folder"))
+
+        "src.setTagFolder" -> notes.setTagFolder(a.optString("tag"), a.optString("folder"))
+
+        "src.migrate" -> notes.migrateLegacy()
 
         "src.get", "idx.stats" -> notes.sourceJson()
 

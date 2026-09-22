@@ -1,8 +1,10 @@
 mark-readnotes.android（随笔）产物清单
-更新：2026-09-22（第 5 轮：渲染层重写为内置 markdown-it 系）
+更新：2026-09-22（第 6 轮：随笔独立目录 + 文件夹）
 包名：dev.markreadnotes　　版本：0.1.0
 
-apk/mark-readnotes-debug-20260922-r5.apk      ← 当前构件（页内标记 0.1.0+r9，渲染层重写）
+apk/mark-readnotes-debug-20260922-r6.apk      ← 当前构件（页内标记 0.1.0+r11，随笔独立目录 + 文件夹）
+  sha256 4f2e4b460d982390e6f17b0b516735421c93d6f7d57e1f7a7419120930a0496e
+apk/mark-readnotes-debug-20260922-r5.apk      ← 第 5 轮构件（页内标记 0.1.0+r9，渲染层重写）
   sha256 2a92c6d8c5f6f9f0bd6908c77523c0350fd555378d2393bf6a254d318f5e6ddf
 apk/mark-readnotes-debug-20260922-r4.apk      ← 第 4 轮构件（页内标记 0.1.0+r7，重构版 + 分板块测试）
   sha256 5d1c3cabb416b530c04e749ed7a0e6bbcccd692abcd6bfbf4bcc832561f5dc17
@@ -45,13 +47,19 @@ docs/
   覆盖自检.md                    登记表 vs 界面 vs 测试映射：七类缺口与最近一次结果
   渲染规格.md                    第 5 轮要做的渲染重写（目标 + R1–R9 判据）
   新需求规格-标签导出.md         导出与导入的规则、界面、判据（导入待定）
-  新需求规格-随笔独立目录.md     随笔独立目录 + 文件夹（隔离、迁移三步）
+  验收清单-第5轮.md              渲染层重写的改造前后对照（16绿11红 → 29绿0红）
+  验收清单-第6轮.md              随笔独立目录 + 文件夹（D1–D4）+ 五板块 83 条全绿
+  新需求规格-随笔独立目录.md     随笔独立目录 + 标签→文件夹映射（第 6 轮已实现，含 D1–D4 判据）
   参考与改进计划-KardLeaf.md     参考 waikr/KardLeaf 的功能对照表与合规规矩
-  问题与需求登记.md             P1–P12 现象/根因/修法/证据（含我自己写空源文件的事故、验收脚本的假红来源）
+  问题与需求登记.md             P1–P17 现象/根因/修法/证据（含写空源文件的事故、验收脚本的假红来源、搬家重复块）
   缺口清单.md                   还没做的（功能/交互/测试/已知限制）
 
 evidence/
-  构件哈希.txt / 构件哈希-r2.txt / 构件哈希-r3.txt / 构件哈希-r4.txt / 构件哈希-r5.txt  各版 apk 的 sha256
+  构件哈希.txt / 构件哈希-r2..r6.txt                各版 apk 的 sha256
+  board-summary-r6.txt / board-summary-r4.txt     五板块结果汇总（r6：11/29/23/10/10）
+  board-store.txt / board-settings.txt            第 6 轮的存储与设置板块原始输出
+  coverage-r6.txt / page-coverage-r6.txt          覆盖自检（文件层面 / 界面自检读数）
+  r6-tree.txt                                     第 6 轮实测的盘上目录树
   board-render-before.txt / board-render-after.txt  渲染层改造前后的同一份判据（16绿11红 → 29绿0红）
   vendor-provenance.txt                            三个内置库的来源与 integrity 校验结果
   vendor-LICENSES.txt / katex-LICENSE-MIT.txt      内置库的许可全文

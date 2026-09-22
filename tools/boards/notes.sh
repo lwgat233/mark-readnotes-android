@@ -38,15 +38,21 @@ page 'document.getElementById("ed-heading").value=""' >/dev/null
 ( cd "$ROOT" && $PROBE type '#ed-tags' "$TAG1" ) >/dev/null
 ( cd "$ROOT" && $PROBE type '#ed-body' "分板块验收用的一行 $STAMP" ) >/dev/null
 tap '#btn-done' >/dev/null; sleep 2
-devcat "/sdcard/Documents/mark-readnotes/$TAG1.md"
-grep -q "验收块 $STAMP" /tmp/board_check.txt && ok "notes.new 块已写进标签对应的 md" "$TAG1.md 含标题" || bad "notes.new 块未落盘" "$TAG1.md 里没有 $STAMP"
+# 落位按“这个块自己”的真实相对路径读（按文件名查会撞上遗留的同名旧行；标签可能被指到文件夹）
+BID=$(page '(async()=>{const r=await call("idx.blocks",{limit:1});return r[0].id;})()' | unq)
+REL1=$(page '(async()=>{const b=await call("blk.get",{id:'"$BID"'});return b.relPath||"";})()' | unq)
+info "验收块 id=$BID 落位：$REL1"
+devcat "/sdcard/Documents/mark-readnotes/$REL1"
+grep -q "验收块 $STAMP" /tmp/board_check.txt && ok "notes.new 块已写进标签对应的 md" "$REL1 含标题" || bad "notes.new 块未落盘" "$REL1 里没有 $STAMP"
 
 # --- move：改第一个标签 = 整块搬家（boardtest → boardtest2） ---
 tap '.card' >/dev/null; sleep 1
 ( cd "$ROOT" && $PROBE type '#ed-tags' "$TAG2" ) >/dev/null
 tap '#btn-done' >/dev/null; sleep 2
-devcat "/sdcard/Documents/mark-readnotes/$TAG2.md"
-grep -q "验收块 $STAMP" /tmp/board_check.txt && ok "notes.move 整块搬到了新文件" "$TAG2.md 含该块" || bad "notes.move 搬家失败" "$TAG2.md 里没有"
+REL2=$(page '(async()=>{const b=await call("blk.get",{id:'"$BID"'});return b.relPath||"";})()' | unq)
+info "搬家后该块落位：$REL2"
+devcat "/sdcard/Documents/mark-readnotes/$REL2"
+grep -q "验收块 $STAMP" /tmp/board_check.txt && ok "notes.move 整块搬到了新文件" "$REL2 含该块" || bad "notes.move 搬家失败" "$REL2 里没有"
 
 # --- delete：两次确认后删除 ---
 # 用 DOM 点击做确认序列（真手指点击的覆盖在第 2/3 轮证据里；这里只做板块级回归，
@@ -58,8 +64,8 @@ TXT=$(page 'document.querySelector("[data-act=delete]").textContent' | unq)
 assert_eq "notes.delete 第一次点击进入确认态" "$TXT" "再点一次确认删除"
 page 'document.querySelector("[data-act=delete]").click()' >/dev/null; sleep 2
 info "删除后提示：$(page 'document.getElementById("toast").textContent')"
-devcat "/sdcard/Documents/mark-readnotes/$TAG2.md"
-grep -q "验收块 $STAMP" /tmp/board_check.txt && bad "notes.delete 块还在文件里" "$TAG2.md 仍含该块" || ok "notes.delete 块已从 md 里删掉" "$TAG2.md 不再含该块"
+devcat "/sdcard/Documents/mark-readnotes/$REL2"
+grep -q "验收块 $STAMP" /tmp/board_check.txt && bad "notes.delete 块还在文件里" "$REL2 仍含该块" || ok "notes.delete 块已从 md 里删掉" "$REL2 不再含该块"
 CARDS2=$(page 'window.mrState().cards')
 # 本轮先建了一个块（基线 +1），删除后应回到开场的基线
 assert_eq "notes.delete 块数回到基线" "${CARDS2:-0}" "$CARDS"

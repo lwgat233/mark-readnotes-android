@@ -1,8 +1,15 @@
 ==== 板块验收：设置 ====
-OK   settings.root 有笔记根这一行 | 笔记根
+OK   settings.root 有随笔目录这一行 | 随笔目录
 OK   settings.root 有文件/块计数行 | 文件 / 块
 OK   settings.root 有最近扫描时间行 | 最近扫描
-     刷新结果：{"files":5,"blocks":7}
+OK   settings.node 有待整理一行 | 待整理
+OK   settings.folder 新建文件夹：输入框+键在位 | True
+OK   settings.folder 标签→文件夹：两个输入+键在位 | True
+     行内按键数：2
+     底部常驻键：["刷新索引","重新选择目录","关闭"]
+OK   settings.keys 底部常驻键 3 个 | 3
+     刷新结果：{"files":8,"blocks":14}
 OK   settings.refresh 回包里有文件数 | True
 OK   settings.refresh 主动刷新时才 walk | True
----- 设置: OK=5 FAIL=0
+OK   settings.refresh 扫描只覆盖随笔目录 | True
+---- 设置: OK=10 FAIL=0

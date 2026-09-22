@@ -65,6 +65,39 @@ class Saf(private val ctx: Context) {
         }
     }
 
+    /** 按相对路径找目录（只找不建）；"a/b" 逐级往下，任一级不存在就 null */
+    fun findPath(tree: Uri, parentDocId: String, relDir: String): Doc? {
+        val parts = splitRel(relDir) ?: return null
+        if (parts.isEmpty()) return stat(tree, parentDocId)
+        var cur = parentDocId
+        for (p in parts) {
+            val hit = children(tree, cur).firstOrNull { it.name == p && it.mime == DocumentsContract.Document.MIME_TYPE_DIR } ?: return null
+            cur = hit.docId
+        }
+        return stat(tree, cur)
+    }
+
+    /** 按相对路径逐级找/建目录（一层层往下；拒绝 .. 与绝对路径） */
+    fun ensurePath(tree: Uri, parentDocId: String, relDir: String): Doc? {
+        val parts = splitRel(relDir) ?: return null
+        var cur = stat(tree, parentDocId) ?: return null
+        for (p in parts) {
+            val hit = children(tree, cur.docId).firstOrNull { it.name == p && it.mime == DocumentsContract.Document.MIME_TYPE_DIR }
+            cur = hit ?: (ensureDir(tree, cur.docId, p) ?: return null)
+        }
+        return cur
+    }
+
+    /** 相对路径切分：去空段、挡住 .. 与反斜杠；非法返回 null */
+    private fun splitRel(rel: String): List<String>? {
+        val parts = rel.replace("\\", "/").split("/").map { it.trim() }.filter { it.isNotBlank() }
+        if (parts.any { it == ".." || it == "." }) {
+            Logs.e("saf.path reject rel=${rel.take(80)}")
+            return null
+        }
+        return parts
+    }
+
     fun createMd(tree: Uri, parentDocId: String, name: String): Doc? = try {
         val created = DocumentsContract.createDocument(ctx.contentResolver, docUri(tree, parentDocId), "text/markdown", name)
         if (created == null) null else stat(tree, docIdOf(created))

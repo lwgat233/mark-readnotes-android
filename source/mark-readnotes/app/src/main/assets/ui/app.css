@@ -88,6 +88,11 @@ button.wide { width: 100%; }
 .row .k { font-size: 12px; color: var(--dim); }
 .row .v { font-size: 15px; word-break: break-all; }
 .row.tap:active { background: var(--panel-2); }
+/* 行内输入 + 它自己的动作（设置小窗用：不在底部堆一堆按键） */
+.row .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+.row .controls input { flex: 1 1 96px; min-width: 0; padding: 8px 10px; min-height: 40px; font-size: 15px;
+  color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; }
+.row .controls .hintline { font-size: 13px; color: var(--dim); }
 .foot { padding: 14px; color: var(--dim); font-size: 12px; }
 
 .toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 90;

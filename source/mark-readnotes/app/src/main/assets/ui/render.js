@@ -14,11 +14,14 @@ const FILE_ORIGIN = 'https://appassets.androidplatform.net/file/';
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function attr(s) { return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
-/* 图片：带协议的（http/https/data）当外部地址，其余（含 ./ 与子目录）交给原生按笔记根解析 */
-function imgSrc(u) {
+/* 图片：带协议的（http/https/data）当外部地址，其余（含 ./ 与子目录）交给原生按笔记根解析。
+   base = 这个块所在文件夹（页面这一侧只知道相对随笔目录的路径），拼进去才能找到同目录的图。 */
+function imgSrc(u, base) {
   const s = String(u == null ? '' : u).trim();
   if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(s)) return s;
-  return FILE_ORIGIN + encodeURIComponent(s.replace(/^\.?\//, ''));
+  const rel = s.replace(/^\.?\//, '');
+  const b = String(base == null ? '' : base).trim().replace(/^\/+|\/+$/g, '');
+  return FILE_ORIGIN + encodeURIComponent(b ? b + '/' + rel : rel);
 }
 
 /* ---------- 放行的“基本 HTML”：白名单（属性名一律小写比对） ---------- */
@@ -132,24 +135,24 @@ function buildMd() {
   const baseImage = md.renderer.rules.image || function (tokens, idx, options, env, self) { return self.renderToken(tokens, idx, options); };
   md.renderer.rules.image = function (tokens, idx, options, env, self) {
     const k = tokens[idx].attrIndex('src');
-    if (k >= 0) tokens[idx].attrs[k][1] = imgSrc(tokens[idx].attrs[k][1]);
+    if (k >= 0) tokens[idx].attrs[k][1] = imgSrc(tokens[idx].attrs[k][1], env.base);
     return baseImage(tokens, idx, options, env, self);
   };
   return md;
 }
 
-function renderMd(src) {
+function renderMd(src, base) {
   if (!MD) MD = buildMd();
   const st = { removedTags: 0, removedAttrs: 0 };
-  return { html: MD.render(String(src || ''), { st: st }), st: st };
+  return { html: MD.render(String(src || ''), { st: st, base: base || '' }), st: st };
 }
 
 /* 渲染进节点：渲染 → 在游离容器里整段解析并消毒 → 挂进页面 → 统计（验收读的就是这套读数）
    为什么要游离容器：整段一起解析才能正确配对标签；先消毒再挂载，危险的标签/属性
    在接触真实文档之前就已经没了。 */
-function renderInto(node, src) {
+function renderInto(node, src, base) {
   const t0 = performance.now();
-  const raw = renderMd(src);
+  const raw = renderMd(src, base);
   const box = document.createElement('div');
   box.innerHTML = raw.html;
   const st = { removedTags: raw.st.removedTags, removedAttrs: raw.st.removedAttrs };
