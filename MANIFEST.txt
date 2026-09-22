@@ -1,44 +1,51 @@
-mark-readnotes.android（随笔）第 1 轮产物清单
-生成时间：2026-09-22
-包名：dev.markreadnotes　　版本：0.1.0（页面 build 0.1.0+r1）
+mark-readnotes.android（随笔）产物清单
+更新：2026-09-22（第 2 轮：TeX + 图片）
+包名：dev.markreadnotes　　版本：0.1.0
 
-apk/mark-readnotes-debug-20260922.apk
+apk/mark-readnotes-debug-20260922-r2.apk      ← 当前构件（页内标记 0.1.0+r4）
+  sha256 e2a355781fd6de6aedcee9673d76f8269958602cbca9f1236f10360a340d46c9
+apk/mark-readnotes-debug-20260922.apk         ← 第 1 轮构件（页内标记 0.1.0+r1）
   sha256 4f7158c91c9556ba282fc609b13392eb515410c2b3a37190a8f7fc3551a6cc0f
-  大小 1,275,133 字节（构建时）
 
 source/mark-readnotes/          可构建的源码树（不含 build/ 与本机 local.properties）
-  build.gradle.kts              插件版本：AGP 8.4.2 / Kotlin 1.9.24
-  settings.gradle.kts           仓库走阿里云镜像（本机 google() 不可达）
-  gradle.properties             低堆 + 不用 daemon（宿主内存紧张）
+  build.gradle.kts / settings.gradle.kts / gradle.properties
+    AGP 8.4.2 / Kotlin 1.9.24；仓库走阿里云镜像；低堆 + 不用 daemon
   app/src/main/java/dev/markreadnotes/
-    MainActivity.kt             WebView 壳、assets 映射、JS 桥、SAF 选择器、返回键
-    Ops.kt                      op 层（一套接口给界面与后续外部控制口）
-    Repo.kt                     读写中枢（懒扫描、写回、搬家）
-    Db.kt                       SQLite（索引 + 最近编辑顺序）
-    Md.kt                       块切分 / 标签判定 / 写回渲染
-    Saf.kt                      SAF 读写
-    Logs.kt                     环形日志（验收读回来用）
-  app/src/main/assets/ui/       前端（index.html / app.css / app.js，无外部依赖）
+    MainActivity.kt   WebView 壳（http 虚拟源、assets 与 /file/ 图片拦截、JS 桥、SAF 选择器、返回键）
+    Ops.kt            op 层（一套接口给界面与后续外部控制口）
+    Repo.kt           读写中枢（懒扫描、写回、搬家、图片按笔记根解析）
+    Db.kt             SQLite（索引 + 最近编辑顺序）
+    Md.kt             块切分 / 标签判定 / 写回渲染
+    Saf.kt            SAF 读写
+    Logs.kt           环形日志（验收读回来用）
+  app/src/main/assets/ui/            前端：index.html / app.css / app.js（自带 markdown 渲染 + HTML 消毒）
+  app/src/main/assets/ui/vendor/katex/  内置 KaTeX 0.18.7（离线；js + 裁剪 css + 20 个 woff2）
 
 docs/
-  当前目标.md                   唯一权威：本轮做什么、判据、下一步
-  功能规格.md                   功能 ↔ 板块 ↔ 按键 ↔ 判据
+  当前目标.md                   唯一权威：已完成/本轮/下一步、用户原话式需求、环境硬约束
+  功能规格.md                   功能 ↔ 板块 ↔ 按键 ↔ 判据（含渲染与消毒规则）
   数据模型.md                   块/文件划分规则、SQLite 结构、懒扫描
-  验收清单-第1轮.md             F1–F7 的可复跑命令与实测值
-  问题与需求登记.md             P1–P4 现象/根因/修法/证据 + 待做需求
+  验收清单-第1轮.md              F1–F7 可复跑命令与实测值
+  验收清单-第2轮.md              F8–F12 可复跑命令与实测值
+  问题与需求登记.md             P1–P7 现象/根因/修法/证据（含我自己写空源文件的事故）
   缺口清单.md                   还没做的（功能/交互/测试/已知限制）
 
 evidence/
-  构件哈希.txt                  apk sha256
-  验收清单-第1轮数据.txt        （见 docs/验收清单-第1轮.md 内嵌实测值）
-  logcat-r1.txt                 运行日志（scan=skipped / scan=single / back.js 等原始行）
-  notes.db                      授权后首次扫描时的 SQLite 快照
-  notes-after-move.db           改标签搬家后的 SQLite 快照
-  notes-final.db                两个块两个文件时的 SQLite 快照
-  apk-sha256.txt                首次安装构件的哈希
+  构件哈希.txt / 构件哈希-r2.txt     两个 apk 的 sha256
+  验收清单-第1轮数据.txt             第 1 轮原始读数（工具原样输出）
+  logcat-r1.txt / logcat-r2.txt      运行日志（scan=skipped / scan=single / img.serve / back.js）
+  notes.db / notes-after-move.db / notes-final.db / notes-r4*.db   SQLite 快照（各阶段）
+  paper-after-delete.md / paper-clean.md                          被编辑过的笔记文件快照
+  katex-provenance.txt / katex-LICENSE-MIT.txt                    KaTeX 来源、校验与许可
+  r2-net-access.log / r2-net-access.txt                           网络图服务端访问日志
+  r2-imgs/                                                        验收用 PNG（pic.png / two.png / net/）
 
-tools/webview-cdp.mjs           WebView 探针：eval / rect / tap / type / listeners
+tools/
+  webview-cdp.mjs               WebView 探针：eval / rect / tap / type / listeners
+  netimg-server.py              网络图验收用的极简 HTTP 服务（把请求写进日志）
 
-env/环境配方.txt                工具链、模拟器、镜像源、复跑命令
+env/环境配方.txt                工具链、模拟器（AVD test35）、镜像源、复跑命令、踩过的坑
+
+THIRD-PARTY-NOTICES.md          第三方组件与许可（KaTeX MIT、AndroidX WebKit Apache-2.0）
 
 未纳入归档：构建产物 build/、Gradle 缓存、本机 local.properties、任何密钥与口令。

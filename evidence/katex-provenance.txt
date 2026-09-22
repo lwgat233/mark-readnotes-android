@@ -1,0 +1,6 @@
+KaTeX 0.18.7（MIT 许可）—— 内置用于数学公式渲染，不联网
+来源: https://registry.npmmirror.com/katex/-/katex-0.18.7.tgz
+tarball sha256: 9a80a3fba2367e99bf67b52bfff52e9534c8c7f198e4eaa12699e4f1df9a0bda  katex-0.18.7.tgz
+与 npm 声明的 dist.integrity(sha512) 校验结果: 一致
+入包内容: katex.min.js + katex.min.css(仅保留 woff2 字体回退) + 20 个 woff2 字体，共 555KB(压缩后)
+许可全文: evidence/katex-LICENSE-MIT.txt

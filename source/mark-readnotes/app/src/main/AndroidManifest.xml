@@ -7,6 +7,7 @@
         android:label="随笔"
         android:allowBackup="false"
         android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
         <activity

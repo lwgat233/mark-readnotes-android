@@ -27,7 +27,7 @@ class MainActivity : Activity() {
     companion object {
         private const val REQ_TREE = 1001
         private const val ORIGIN = "appassets.androidplatform.net"
-        private const val BUILD_TAG = "0.1.0+r1"
+        private const val BUILD_TAG = "0.1.0+r4"
     }
 
     private lateinit var web: WebView
@@ -71,6 +71,8 @@ class MainActivity : Activity() {
                 if (u.host != ORIGIN) return null
                 val path = (u.path ?: "").removePrefix("/")
                 if (path.isBlank()) return null
+                // 笔记里的本地图片：/file/<相对路径>，按笔记根解析后流式返回（Uri.path 已是解码后的）
+                if (path.startsWith("file/")) return serveImage(path.removePrefix("file/"))
                 return try {
                     WebResourceResponse(mimeOf(path), null, 200, "OK", mapOf("Cache-Control" to "no-store"), assets.open(path))
                 } catch (e: Exception) {
@@ -86,7 +88,7 @@ class MainActivity : Activity() {
         }
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
-            WebViewCompat.addWebMessageListener(web, "mrbridge", setOf("https://$ORIGIN")) { _, message, _, _, reply ->
+            WebViewCompat.addWebMessageListener(web, "mrbridge", setOf("http://$ORIGIN")) { _, message, _, _, reply ->
                 val raw = message.data ?: return@addWebMessageListener
                 Thread {
                     val out = ops.dispatch(raw)
@@ -97,18 +99,43 @@ class MainActivity : Activity() {
             Logs.e("bridge=unavailable（本机 WebView 不支持 WEB_MESSAGE_LISTENER）")
         }
 
-        web.loadUrl("https://$ORIGIN/ui/index.html")
+        // 壳子走 http 虚拟源（本地拦截，不出网）：笔记里的 http 图片若挂在 https 页面上，会被浏览器
+        // 按“明文图片”直接拦掉（MIXED_CONTENT_COMPATIBILITY_MODE 也拦，实测日志：
+        // "requested an insecure image … This request has been blocked"），而阅读随笔的图源大量是 http。
+        // 改成 http 源后不再有混合内容问题；代价是页面不是安全源（本项目不用 crypto.subtle 这类能力）。
+        web.loadUrl("http://$ORIGIN/ui/index.html")
     }
 
-    private fun mimeOf(path: String): String = when {
-        path.endsWith(".html") -> "text/html"
-        path.endsWith(".js") -> "application/javascript"
-        path.endsWith(".css") -> "text/css"
-        path.endsWith(".json") -> "application/json"
-        path.endsWith(".svg") -> "image/svg+xml"
-        path.endsWith(".png") -> "image/png"
-        path.endsWith(".woff2") -> "font/woff2"
-        else -> "text/plain"
+    private fun mimeOf(path: String): String {
+        val p = path.lowercase()
+        return when {
+            p.endsWith(".html") -> "text/html"
+            p.endsWith(".js") -> "application/javascript"
+            p.endsWith(".css") -> "text/css"
+            p.endsWith(".json") -> "application/json"
+            p.endsWith(".svg") -> "image/svg+xml"
+            p.endsWith(".png") -> "image/png"
+            p.endsWith(".jpg") || p.endsWith(".jpeg") -> "image/jpeg"
+            p.endsWith(".gif") -> "image/gif"
+            p.endsWith(".webp") -> "image/webp"
+            p.endsWith(".bmp") -> "image/bmp"
+            p.endsWith(".heic") -> "image/heic"
+            p.endsWith(".woff2") -> "font/woff2"
+            p.endsWith(".woff") -> "font/woff"
+            p.endsWith(".md") -> "text/markdown"
+            else -> "text/plain"
+        }
+    }
+
+    /** 笔记里的本地图片：从笔记根解析 → 流式返回；找不到就 404（页面里表现为图裂，不静默当成功） */
+    private fun serveImage(rel: String): WebResourceResponse {
+        val notFound = {
+            WebResourceResponse("text/plain", "utf-8", 404, "Not Found", emptyMap(),
+                ByteArrayInputStream("image not found: $rel".toByteArray()))
+        }
+        val doc = try { repo.findImage(rel) } catch (e: Throwable) { null } ?: return notFound()
+        val stream = repo.openImage(doc.docId) ?: return notFound()
+        return WebResourceResponse(doc.mime.ifBlank { mimeOf(rel) }, null, 200, "OK", mapOf("Cache-Control" to "max-age=30"), stream)
     }
 
     /** 后端 → 前端事件（目录授权是异步的，结束时推给页面） */

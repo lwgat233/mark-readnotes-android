@@ -51,6 +51,8 @@ button.wide { width: 100%; }
 .sheet.open { transform: translateY(0); }
 .sheet .board-scroll { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 #board { z-index: 60; }
+/* 小窗要盖在白板之上：它就是从白板里点开的（曾因 z-index 更低而点不到里面的键） */
+#sheet { z-index: 70; }
 
 /* 归档区：一级标题与标签单独一块，和正文分开 */
 .arch { background: var(--arch); border-bottom: 1px solid var(--line); padding: 12px; }
@@ -77,6 +79,9 @@ button.wide { width: 100%; }
 .preview table { border-collapse: collapse; width: 100%; }
 .preview th, .preview td { border: 1px solid var(--line); padding: 5px 8px; font-size: 14px; }
 .preview .tex { color: #c8d3f5; font-family: ui-monospace, monospace; }
+.preview .tex-block { display: block; text-align: center; overflow-x: auto; padding: 6px 0; }
+.preview .katex { font-size: 1.06em; }
+.preview .katex-error { color: #ff6b6b; word-break: break-all; }
 
 /* 小窗里的信息行 */
 .row { padding: 12px 14px; border-bottom: 1px solid var(--line); }

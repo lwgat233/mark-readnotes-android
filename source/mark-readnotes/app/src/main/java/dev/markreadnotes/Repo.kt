@@ -249,7 +249,6 @@ class Repo(private val ctx: Context) {
         val newName = Md.fileNameForTag(newTag)
         val edited = BData(heading, effTags, body)
         val rows = db.blocksOfFile(file.id)
-        val cur = db.blockById(id) ?: blk
         var moved = false
 
         if (newName == file.name) {
@@ -304,7 +303,42 @@ class Repo(private val ctx: Context) {
         return JSONObject().put("id", id).put("deleted", true)
     }
 
-    private fun preview(body: String): String {
+    /** 本地图片（md 里的相对路径）：按笔记根逐级解析，只允许留在根目录内部 */
+    fun findImage(rel: String): Saf.Doc? {
+        val root = root() ?: return null
+        val clean = rel.trim().removePrefix("./").removePrefix("/")
+        if (clean.isBlank() || clean.contains("..")) {
+            Logs.e("img.reject rel=${rel.take(80)}")
+            return null
+        }
+        var parentId = root.rootDocId
+        val parts = clean.split("/")
+        for ((i, seg) in parts.withIndex()) {
+            val hit = saf.children(root.treeUri, parentId).firstOrNull { it.name == seg } ?: run {
+                Logs.e("img.miss rel=$clean at=$seg")
+                return null
+            }
+            if (i == parts.size - 1) {
+                Logs.i("img.serve rel=$clean mime=${hit.mime} size=${hit.size}")
+                return hit
+            }
+            parentId = hit.docId
+        }
+        return null
+    }
+
+    /** 取图片字节流（给 WebView 的虚拟源用） */
+    fun openImage(docId: String): java.io.InputStream? {
+        val root = root() ?: return null
+        return try {
+            ctx.contentResolver.openInputStream(saf.docUri(root.treeUri, docId))
+        } catch (e: Exception) {
+            Logs.e("img.open failed doc=$docId err=${e.message}")
+            null
+        }
+    }
+
+    fun preview(body: String): String {
         val t = body.replace(Regex("!\\[[^\\]]*\\]\\([^)]*\\)"), "[图片]")
             .replace(Regex("```[\\s\\S]*?```"), "[代码]")
             .replace(Regex("[#>*`_-]"), "")

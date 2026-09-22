@@ -1,0 +1,28 @@
+--------- beginning of main
+09-22 07:41:09.906  4867  4867 I markreadnotes: app.start build=0.1.0+r4 scan=skipped(reason=startup)
+09-22 07:41:09.920  4867  4867 I markreadnotes: idx.state={"has":true,"treeUri":"content:\/\/com.android.externalstorage.documents\/tree\/primary%3ADocuments","pickedName":"Documents","rootLabel":"Documents\/mark-readnotes","files":2,"blocks":4,"lastScanAt":1790062061554}
+09-22 07:41:11.144  4867  4987 I markreadnotes: op=app.info
+09-22 07:41:11.180  4867  4988 I markreadnotes: op=src.get
+09-22 07:41:11.305  4867  4992 I markreadnotes: op=idx.blocks
+09-22 07:41:20.995  4867  5015 I markreadnotes: scan=single(file=paper.md,state=unchanged)
+09-22 07:41:20.998  4867  5015 I markreadnotes: op=blk.get
+09-22 07:41:22.260  4867  4939 I markreadnotes: img.serve rel=img/two.png mime=image/png size=115
+09-22 07:41:22.261  4867  4937 I markreadnotes: img.serve rel=pic.png mime=image/png size=146
+09-22 07:41:28.767  4867  5018 I markreadnotes: scan=single(file=paper.md,state=unchanged)
+09-22 07:41:28.882  4867  5018 I markreadnotes: block.delete id=3
+09-22 07:41:28.885  4867  5018 I markreadnotes: op=blk.delete
+09-22 07:41:28.891  4867  5020 I markreadnotes: op=src.get
+09-22 07:41:28.905  4867  5021 I markreadnotes: op=idx.blocks
+09-22 07:41:51.373  4867  5032 I markreadnotes: scan=single(file=paper.md,state=unchanged)
+09-22 07:41:51.375  4867  5032 I markreadnotes: op=blk.get
+09-22 07:41:55.315  4867  5034 I markreadnotes: scan=single(file=paper.md,state=unchanged)
+09-22 07:41:55.356  4867  5034 I markreadnotes: block.delete id=4
+09-22 07:41:55.362  4867  5034 I markreadnotes: op=blk.delete
+09-22 07:41:55.394  4867  5037 I markreadnotes: op=src.get
+09-22 07:41:55.423  4867  5039 I markreadnotes: op=idx.blocks
+09-22 07:42:07.469  4867  5053 I markreadnotes: block.new tag=paper file=paper.md id=3
+09-22 07:42:07.470  4867  5053 I markreadnotes: op=blk.new
+09-22 07:42:07.541  4867  5055 I markreadnotes: op=src.get
+09-22 07:42:07.606  4867  5056 I markreadnotes: op=idx.blocks
+09-22 07:42:09.883  4867  5059 I markreadnotes: scan=single(file=paper.md,state=unchanged)
+09-22 07:42:09.885  4867  5059 I markreadnotes: op=blk.get
